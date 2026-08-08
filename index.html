@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Year in Color</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14161f">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Year in Color">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+  --bg:#14161f; --panel:#1c1f2b; --panel-line:#2a2e3d; --cell-empty:#242836;
+  --text:#f1efe9; --text-dim:#9298aa; --text-faint:#5c6178;
+  --pink:#ff7aae; --green:#4fb286; --yellow:#ffd166; --blue:#5b8fd6; --grey:#7c8798; --red:#e4572e;
+  --radius:10px;
+  --season-accent-1: rgba(255,122,174,0.06);
+  --season-accent-2: rgba(228,87,46,0.06);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);}
+body{font-family:'Inter',sans-serif;color:var(--text);min-height:100vh;}
+#yic-root{padding:32px 20px 60px;position:relative;overflow:hidden;
+  background:
+    radial-gradient(circle at 15% 0%, var(--season-accent-1), transparent 45%),
+    radial-gradient(circle at 85% 100%, var(--season-accent-2), transparent 45%),
+    var(--bg);
+  background-size:200% 200%, 200% 200%, 100% 100%;
+  animation: yic-ambient 22s ease-in-out infinite;
+}
+#yic-root[data-season="rainy"]{ --season-accent-1: rgba(91,143,214,0.12); --season-accent-2: rgba(124,135,152,0.09); }
+#yic-root[data-season="winter"]{ --season-accent-1: rgba(180,210,255,0.11); --season-accent-2: rgba(200,220,255,0.07); }
+#yic-root[data-season="summer"]{ --season-accent-1: rgba(255,190,90,0.10); --season-accent-2: rgba(255,209,102,0.07); }
+#yic-root[data-season="autumn"]{ --season-accent-1: rgba(228,140,46,0.10); --season-accent-2: rgba(180,100,40,0.07); }
+
+#yic-season-layer{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+.yic-drop{position:absolute;top:-8vh;width:1.5px;background:linear-gradient(to bottom, rgba(190,215,255,0), rgba(190,215,255,0.65));border-radius:2px;animation-name:yic-rain-fall;animation-timing-function:linear;animation-iteration-count:infinite;}
+@keyframes yic-rain-fall{ from{ transform:translateY(-8vh); } to{ transform:translateY(112vh); } }
+.yic-snowflake{position:absolute;top:-6vh;border-radius:50%;background:rgba(255,255,255,0.85);animation-name:yic-snow-fall;animation-timing-function:linear;animation-iteration-count:infinite;}
+@keyframes yic-snow-fall{ from{ transform:translate(0,-6vh); } to{ transform:translate(24px,112vh); } }
+.yic-leaf{position:absolute;top:-6vh;animation-name:yic-leaf-fall;animation-timing-function:linear;animation-iteration-count:infinite;}
+@keyframes yic-leaf-fall{ from{ transform:translate(0,-6vh) rotate(0deg); } to{ transform:translate(36px,112vh) rotate(340deg); } }
+.yic-glow-orb{position:absolute;border-radius:50%;background:radial-gradient(circle, rgba(255,209,102,0.55), rgba(255,209,102,0));animation-name:yic-glow-float;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
+@keyframes yic-glow-float{ 0%,100%{ transform:translateY(0) scale(1); opacity:0.5; } 50%{ transform:translateY(-18px) scale(1.15); opacity:0.85; } }
+@keyframes yic-ambient{0%{background-position:15% 0%, 85% 100%, 0 0;}50%{background-position:35% 20%, 65% 80%, 0 0;}100%{background-position:15% 0%, 85% 100%, 0 0;}}
+.yic-wrap{max-width:900px;margin:0 auto;position:relative;z-index:1;}
+#yic-season-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+.yic-header{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;}
+.yic-title{font-family:'Fraunces',serif;font-style:italic;font-weight:500;font-size:32px;margin:0;}
+.yic-title b{font-style:normal;font-weight:600;}
+.yic-year-nav{display:flex;align-items:center;gap:14px;font-family:'IBM Plex Mono',monospace;}
+.yic-year-nav button{background:none;border:1px solid var(--panel-line);color:var(--text-dim);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.yic-year-nav button:hover{border-color:var(--text-dim);color:var(--text);transform:translateY(-1px);}
+.yic-year-nav span{font-size:18px;font-weight:500;min-width:52px;text-align:center;}
+.yic-subtitle{color:var(--text-dim);font-size:14px;margin:0 0 20px;}
+
+.yic-setup{background:var(--panel);border:1px solid var(--panel-line);border-radius:var(--radius);padding:26px;max-width:440px;margin:40px auto;}
+.yic-setup h2{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:0 0 6px;}
+.yic-setup p{font-size:13px;color:var(--text-dim);margin:0 0 18px;line-height:1.5;}
+.yic-setup label{display:block;font-size:12px;color:var(--text-faint);margin-bottom:5px;}
+.yic-setup input{width:100%;background:#1c1f2b;border:1px solid #363c50;border-radius:7px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;padding:9px 11px;margin-bottom:14px;}
+.yic-setup button{width:100%;background:var(--text);color:#14161f;font-weight:600;border:none;border-radius:8px;padding:10px;font-size:14px;cursor:pointer;}
+.yic-setup button:hover{background:#fff;}
+.yic-whoami-btns{display:flex;gap:10px;}
+.yic-whoami-btns button{flex:1;background:none;border:1.5px solid var(--panel-line);color:var(--text);border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;}
+.yic-whoami-btns button:hover{border-color:var(--pink);background:rgba(255,122,174,0.08);}
+.yic-share-box{background:#1c1f2b;border:1px solid #363c50;border-radius:8px;padding:10px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);word-break:break-all;margin-bottom:14px;}
+.yic-copy-btn{background:none;border:1px solid var(--panel-line);color:var(--text-dim);font-size:12px;padding:6px 10px;border-radius:6px;cursor:pointer;margin-bottom:14px;}
+.yic-copy-btn:hover{color:var(--text);border-color:var(--text-dim);}
+
+.yic-profile-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
+.yic-profile-toggle{display:flex;background:var(--panel);border:1px solid var(--panel-line);border-radius:9px;padding:3px;}
+.yic-profile-toggle button{background:none;border:none;color:var(--text-dim);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;padding:7px 14px;border-radius:6px;cursor:pointer;transition:all .15s;}
+.yic-profile-toggle button.yic-active{background:var(--text);color:#14161f;}
+.yic-profile-actions{display:flex;align-items:center;gap:14px;}
+.yic-switch-who,.yic-share-link-btn,.yic-customize-btn{background:none;border:none;color:var(--text-faint);font-size:11.5px;cursor:pointer;text-decoration:underline;}
+
+.yic-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;}
+.yic-modal{background:var(--panel);border:1px solid var(--panel-line);border-radius:var(--radius);padding:24px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;}
+.yic-modal h2{font-family:'Fraunces',serif;font-weight:600;font-size:18px;margin:0 0 4px;}
+.yic-modal p{font-size:12.5px;color:var(--text-dim);margin:0 0 16px;line-height:1.5;}
+.yic-custom-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.yic-custom-row input[type=color]{width:34px;height:34px;border:1px solid var(--panel-line);border-radius:8px;background:none;cursor:pointer;padding:2px;flex-shrink:0;}
+.yic-custom-row input[type=text]{flex:1;background:#1c1f2b;border:1px solid #363c50;border-radius:7px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:8px 10px;}
+.yic-modal-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.yic-modal-save{flex:1;background:var(--text);color:#14161f;font-weight:600;border:none;border-radius:8px;padding:9px;font-size:13.5px;cursor:pointer;}
+.yic-modal-save:hover{background:#fff;}
+.yic-modal-reset,.yic-modal-close{background:none;border:1px solid var(--panel-line);color:var(--text-dim);border-radius:8px;padding:9px 12px;font-size:12.5px;cursor:pointer;}
+.yic-modal-reset:hover,.yic-modal-close:hover{color:var(--text);border-color:var(--text-dim);}
+
+.yic-streak{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg, rgba(255,209,102,0.10), rgba(255,122,174,0.08));border:1px solid var(--panel-line);border-radius:var(--radius);padding:14px 18px;margin-bottom:18px;opacity:0;animation: yic-fade-up .5s cubic-bezier(.2,.8,.2,1) forwards;}
+.yic-streak-flame{font-size:26px;line-height:1;filter:drop-shadow(0 0 6px rgba(255,209,102,0.5));animation:yic-flame-flicker 1.8s ease-in-out infinite;flex-shrink:0;}
+@keyframes yic-flame-flicker{0%,100%{transform:scale(1) rotate(-2deg);}50%{transform:scale(1.1) rotate(2deg);}}
+.yic-streak-num{font-family:'Fraunces',serif;font-weight:600;font-size:24px;margin-right:2px;}
+.yic-streak-text{display:flex;flex-direction:column;gap:2px;}
+.yic-streak-main{font-size:14px;color:var(--text);}
+.yic-streak-sub{font-size:12px;color:var(--text-faint);}
+.yic-streak-sub.yic-streak-warn{color:var(--yellow);}
+.yic-streak-sub.yic-streak-best{color:var(--pink);}
+.yic-confetti{position:fixed;width:7px;height:7px;border-radius:2px;pointer-events:none;z-index:80;animation:yic-confetti-burst .9s ease-out forwards;}
+@keyframes yic-confetti-burst{to{transform:translate(var(--tx),var(--ty)) rotate(var(--rot));opacity:0;}}
+
+.yic-checkin{background:linear-gradient(135deg, rgba(255,122,174,0.09), rgba(228,87,46,0.07));border:1px solid var(--panel-line);border-radius:var(--radius);padding:16px 18px;margin-bottom:22px;animation: yic-slide-in .5s cubic-bezier(.2,.8,.2,1) both;}
+.yic-checkin-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+@keyframes yic-slide-in{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+.yic-checkin.yic-checkin-out{animation: yic-slide-out .35s ease forwards;}
+@keyframes yic-slide-out{to{opacity:0;transform:translateY(-8px) scale(.98);max-height:0;padding-top:0;padding-bottom:0;margin-bottom:0;}}
+.yic-checkin-text{font-size:14px;color:var(--text);}
+.yic-checkin-text b{font-weight:600;}
+.yic-checkin-dots{display:flex;gap:8px;flex-wrap:wrap;}
+.yic-checkin-dots button{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.15);cursor:pointer;transition:transform .15s, box-shadow .15s;}
+.yic-checkin-dots button:hover{transform:scale(1.18);box-shadow:0 0 0 3px rgba(255,255,255,0.08);}
+.yic-checkin-skip{background:none;border:none;color:var(--text-faint);font-size:12px;cursor:pointer;text-decoration:underline;}
+.yic-checkin-note{width:100%;background:#1c1f2b;border:1px solid #363c50;border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:10px 12px;resize:none;margin:10px 0;}
+.yic-checkin-actions{display:flex;gap:10px;align-items:center;}
+.yic-checkin-save{background:var(--text);color:#14161f;font-weight:600;border:none;border-radius:7px;padding:7px 14px;font-size:13px;cursor:pointer;}
+.yic-checkin-save:hover{background:#fff;}
+
+.yic-tasks-panel{background:var(--panel);border:1px solid var(--panel-line);border-radius:var(--radius);padding:16px 18px;margin-bottom:22px;}
+.yic-tasks-panel-title{font-family:'Fraunces',serif;font-weight:600;font-size:15px;color:var(--text);margin-bottom:2px;}
+.yic-task-progress{font-size:11.5px;color:var(--text-faint);margin-bottom:8px;}
+.yic-tasklist{display:flex;flex-direction:column;gap:2px;margin-bottom:8px;}
+.yic-task-row{display:flex;align-items:center;gap:9px;padding:4px 0;}
+.yic-task-check{width:17px;height:17px;border:1.5px solid var(--panel-line);border-radius:5px;cursor:pointer;flex-shrink:0;background:none;position:relative;padding:0;transition:all .12s;}
+.yic-task-check:hover{border-color:var(--text-dim);}
+.yic-task-check.yic-done{background:var(--green);border-color:var(--green);}
+.yic-task-check.yic-done::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#14161f;font-weight:700;}
+.yic-task-text{flex:1;font-size:13.5px;color:var(--text);word-break:break-word;}
+.yic-task-text.yic-done{color:var(--text-faint);text-decoration:line-through;}
+.yic-task-del{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:15px;padding:2px 6px;line-height:1;flex-shrink:0;}
+.yic-task-del:hover{color:var(--red);}
+.yic-task-empty{font-size:12.5px;color:var(--text-faint);margin-bottom:8px;}
+.yic-task-add-row{display:flex;gap:6px;}
+.yic-task-add-input{flex:1;background:#1c1f2b;border:1px solid #363c50;border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:12.5px;padding:7px 9px;}
+.yic-task-add-btn{background:var(--text);color:#14161f;border:none;border-radius:6px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;flex-shrink:0;}
+.yic-task-add-btn:hover{background:#fff;}
+.yic-pop-divider{height:1px;background:#363c50;margin:6px 0 8px;}
+.yic-task-badge{position:absolute;bottom:2px;left:2px;width:3.5px;height:3.5px;border-radius:1px;background:rgba(20,22,31,0.75);}
+.yic-task-badge.yic-task-all-done{background:rgba(20,22,31,0.85);box-shadow:0 0 0 1px rgba(255,255,255,0.4) inset;}
+
+.yic-legend{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:28px;padding:14px 18px;background:var(--panel);border-radius:var(--radius);border:1px solid var(--panel-line);}
+.yic-legend-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dim);}
+.yic-swatch{width:13px;height:13px;border-radius:4px;flex-shrink:0;}
+
+.yic-quilt{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:30px;}
+@media (max-width:720px){.yic-quilt{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:420px){.yic-quilt{grid-template-columns:1fr;}}
+.yic-month{background:var(--panel);border:1px solid var(--panel-line);border-radius:var(--radius);padding:12px;opacity:0;animation: yic-fade-up .5s cubic-bezier(.2,.8,.2,1) forwards;}
+@keyframes yic-fade-up{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.yic-month-name{font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;}
+.yic-dow-row{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;}
+.yic-dow{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--text-faint);text-align:center;}
+.yic-days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.yic-day{aspect-ratio:1;border-radius:3px;background:var(--cell-empty);cursor:pointer;position:relative;font-family:'IBM Plex Mono',monospace;font-size:8px;display:flex;align-items:center;justify-content:center;color:transparent;transition:transform .15s, background-color .3s;}
+.yic-day.yic-blank{background:none;cursor:default;}
+.yic-day.yic-future{cursor:default;opacity:0.35;}
+.yic-day.yic-future:hover{transform:none;}
+.yic-day:not(.yic-blank):not(.yic-future):hover{transform:scale(1.2);color:rgba(0,0,0,0.55);}
+.yic-day.yic-mood-pink{background:var(--pink);}
+.yic-day.yic-mood-green{background:var(--green);}
+.yic-day.yic-mood-yellow{background:var(--yellow);}
+.yic-day.yic-mood-blue{background:var(--blue);}
+.yic-day.yic-mood-grey{background:var(--grey);}
+.yic-day.yic-mood-red{background:var(--red);}
+.yic-day.yic-today{box-shadow:0 0 0 1.5px var(--text) inset;animation: yic-pulse 2.4s ease-in-out infinite;}
+@keyframes yic-pulse{0%,100%{box-shadow:0 0 0 1.5px var(--text) inset;}50%{box-shadow:0 0 0 1.5px var(--text) inset, 0 0 8px 1px rgba(241,239,233,0.35);}}
+.yic-day.yic-just-set{animation: yic-pop .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes yic-pop{0%{transform:scale(0.6);}60%{transform:scale(1.25);}100%{transform:scale(1);}}
+.yic-note-dot{position:absolute;top:2px;right:2px;width:3.5px;height:3.5px;border-radius:50%;background:rgba(20,22,31,0.75);}
+
+.yic-pop{position:fixed;z-index:50;background:#252938;border:1px solid #363c50;border-radius:10px;padding:10px;box-shadow:0 12px 30px rgba(0,0,0,0.5);display:flex;flex-direction:column;gap:2px;width:260px;opacity:0;transform:scale(0.92) translateY(4px);animation: yic-pop-in .16s cubic-bezier(.2,.8,.2,1) forwards;}
+@keyframes yic-pop-in{to{opacity:1;transform:scale(1) translateY(0);}}
+.yic-pop-date{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);padding:2px 2px 8px;}
+.yic-pop-moods{display:flex;flex-wrap:wrap;gap:7px;padding:0 2px 10px;}
+.yic-pop-mood-btn{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;transition:transform .12s, border-color .12s;}
+.yic-pop-mood-btn:hover{transform:scale(1.12);}
+.yic-pop-mood-btn.yic-selected{border-color:var(--text);}
+.yic-pop-note{width:100%;background:#1c1f2b;border:1px solid #363c50;border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:12.5px;padding:7px 9px;resize:none;margin:0 0 8px;}
+.yic-pop-actions{display:flex;gap:8px;}
+.yic-pop-save{flex:1;background:var(--text);color:#14161f;font-weight:600;border:none;border-radius:6px;padding:7px;font-size:12.5px;cursor:pointer;text-align:center;}
+.yic-pop-save:hover{background:#fff;}
+.yic-pop-clear{background:none;border:1px solid #363c50;color:var(--text-faint);border-radius:6px;padding:7px 10px;font-size:12px;cursor:pointer;}
+.yic-pop-clear:hover{color:var(--red);border-color:var(--red);}
+
+.yic-stats{background:var(--panel);border:1px solid var(--panel-line);border-radius:var(--radius);padding:22px 24px;}
+.yic-stats-head{font-family:'Fraunces',serif;font-weight:600;font-size:18px;margin:0 0 4px;}
+.yic-stats-sub{font-size:12px;color:var(--text-faint);margin:0 0 18px;}
+.yic-spark-wrap{margin-bottom:20px;}
+.yic-spark-label{font-size:11px;color:var(--text-faint);margin-bottom:6px;letter-spacing:0.03em;text-transform:uppercase;}
+.yic-spark-line{fill:none;stroke:url(#yic-spark-gradient);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.yic-spark-dot{opacity:0;animation: yic-dot-in .3s ease forwards;}
+@keyframes yic-dot-in{to{opacity:1;}}
+.yic-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.yic-bar-label{width:110px;font-size:12.5px;color:var(--text-dim);flex-shrink:0;}
+.yic-bar-track{flex:1;height:8px;background:var(--cell-empty);border-radius:4px;overflow:hidden;}
+.yic-bar-fill{height:100%;border-radius:4px;width:0%;transition:width 1s cubic-bezier(.16,.84,.44,1);}
+.yic-bar-pct{width:38px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--text-dim);}
+.yic-divider{height:1px;background:var(--panel-line);margin:18px 0;}
+.yic-insights{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}
+.yic-insights li{font-size:13.5px;line-height:1.55;color:var(--text);padding-left:16px;position:relative;opacity:0;animation: yic-fade-up .4s ease forwards;}
+.yic-insights li::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;background:var(--text-faint);}
+.yic-empty-note{font-size:13px;color:var(--text-dim);}
+.yic-notes-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}
+.yic-notes-list li{font-size:13px;line-height:1.5;color:var(--text-dim);opacity:0;animation: yic-fade-up .4s ease forwards;}
+.yic-notes-date{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text-faint);display:block;margin-bottom:2px;}
+.yic-notes-quote{color:var(--text);}
+.yic-clear-year{background:none;border:1px solid var(--panel-line);color:var(--text-faint);font-size:11.5px;padding:6px 12px;border-radius:7px;cursor:pointer;font-family:'Inter',sans-serif;margin-top:18px;transition:all .15s;}
+.yic-clear-year:hover{color:var(--red);border-color:var(--red);}
+.yic-loading{padding:40px;text-align:center;color:var(--text-dim);font-size:14px;}
+.yic-error{padding:20px;color:var(--red);font-size:13px;background:var(--panel);border:1px solid var(--red);border-radius:var(--radius);max-width:500px;margin:40px auto;}
+
+@media (prefers-reduced-motion: reduce){
+  #yic-root, .yic-month, .yic-checkin, .yic-day.yic-today, .yic-day.yic-just-set, .yic-pop, .yic-insights li, .yic-notes-list li, .yic-spark-dot, .yic-streak, .yic-streak-flame{animation:none !important;}
+  .yic-bar-fill{transition:none !important;}
+}
+</style>
+</head>
+<body>
+
+<div id="yic-root">
+  <canvas id="yic-season-canvas"></canvas>
+  <div class="yic-wrap">
+    <div id="yic-setup-slot"></div>
+    <div id="yic-app-body" style="display:none;">
+      <div class="yic-header">
+        <h1 class="yic-title">Year <b>in Color</b></h1>
+        <div class="yic-year-nav">
+          <button id="yic-prev">&#8249;</button>
+          <span id="yic-year-label"></span>
+          <button id="yic-next">&#8250;</button>
+        </div>
+      </div>
+      <p class="yic-subtitle">Click any day up to today, pick a color, leave a short note if you like. Saves instantly and syncs to anyone with your link.</p>
+
+      <div class="yic-profile-bar">
+        <div class="yic-profile-toggle" id="yic-profile-toggle"></div>
+        <div class="yic-profile-actions">
+          <button class="yic-customize-btn" id="yic-customize-btn">customize colors</button>
+          <button class="yic-share-link-btn" id="yic-share-link-btn">copy invite link</button>
+          <button class="yic-switch-who" id="yic-switch-who-btn">not you? switch</button>
+        </div>
+      </div>
+
+      <div id="yic-streak-slot"></div>
+      <div id="yic-checkin-slot"></div>
+      <div id="yic-today-tasks-slot"></div>
+
+      <div class="yic-legend" id="yic-legend"></div>
+
+      <div class="yic-quilt" id="yic-quilt"></div>
+      <div class="yic-stats" id="yic-stats"></div>
+    </div>
+  </div>
+</div>
+<div id="yic-pop-layer"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAGjCOHFXm9PDmlU2QE5j_xapVzaxVolto",
+    authDomain: "year-in-color-95348.firebaseapp.com",
+    projectId: "year-in-color-95348",
+    storageBucket: "year-in-color-95348.firebasestorage.app",
+    messagingSenderId: "902432961948",
+    appId: "1:902432961948:web:5ef944a12452bf7ff7c459"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+/* ---- groupId: identifies this shared tracker, lives in the URL (and is
+     remembered locally so an installed home-screen icon still finds it).
+     IMPORTANT: this is never auto-generated on page load anymore — a new
+     tracker is only ever created when the person explicitly chooses to,
+     so simply landing on the site can't accidentally wipe/replace it. ---- */
+const params = new URLSearchParams(window.location.search);
+let groupId = params.get('g') || localStorage.getItem('yic-last-groupId') || null;
+function persistGroupId(id){
+  groupId = id;
+  localStorage.setItem('yic-last-groupId', id);
+  const p = new URLSearchParams(window.location.search);
+  if(p.get('g') !== id){
+    p.set('g', id);
+    history.replaceState(null, '', '?' + p.toString());
+  }
+}
+if(groupId){ persistGroupId(groupId); }
+function shareUrl(){ return window.location.origin + window.location.pathname + '?g=' + groupId; }
+
+/* ---- Firestore helpers for new structure ---- */
+// Group config: /trackers/{groupId}/config
+async function getGroupConfig(){
+  try{
+    const snap = await getDoc(doc(db, 'trackers', groupId, 'config', 'data'));
+    return snap.exists() ? snap.data() : null;
+  }catch(e){ console.error('getGroupConfig failed', e); return null; }
+}
+async function setGroupConfig(cfg){
+  try{ await setDoc(doc(db, 'trackers', groupId, 'config', 'data'), cfg); }
+  catch(e){ console.error('setGroupConfig failed', e); }
+}
+
+// Members: /trackers/{groupId}/members/{userId}
+async function getMember(userId){
+  try{
+    const snap = await getDoc(doc(db, 'trackers', groupId, 'members', userId));
+    return snap.exists() ? snap.data() : null;
+  }catch(e){ console.error('getMember failed', e); return null; }
+}
+async function setMember(userId, data){
+  try{ await setDoc(doc(db, 'trackers', groupId, 'members', userId), data); }
+  catch(e){ console.error('setMember failed', e); }
+}
+async function getAllMembers(){
+  // For now, we'll get from groupConfig.members array
+  const cfg = await getGroupConfig();
+  return cfg?.members || [];
+}
+
+// User moods: /trackers/{groupId}/moods/{userId}/{year}
+async function getUserMoods(userId, year){
+  try{
+    const snap = await getDoc(doc(db, 'trackers', groupId, 'moods', userId, year.toString(), 'data'));
+    return snap.exists() ? snap.data() : {};
+  }catch(e){ console.error('getUserMoods failed', e); return {}; }
+}
+async function setUserMoods(userId, year, moods){
+  try{ await setDoc(doc(db, 'trackers', groupId, 'moods', userId, year.toString(), 'data'), moods); }
+  catch(e){ console.error('setUserMoods failed', e); }
+}
+
+// Legacy kv support (for backwards compat)
+async function kvGet(key){
+  try{
+    const snap = await getDoc(doc(db, 'trackers', groupId, 'kv', key));
+    return snap.exists() ? { value: snap.data().value } : null;
+  }catch(e){ console.error('kvGet failed', e); return null; }
+}
+async function kvSet(key, value){
+  try{ await setDoc(doc(db, 'trackers', groupId, 'kv', key), { value }); }
+  catch(e){ console.error('kvSet failed', e); }
+}
+
+(function(){
+  const canvas = document.getElementById('yic-season-canvas');
+  if(!canvas || !canvas.getContext) return;
+  const root = document.getElementById('yic-root');
+  const ctx = canvas.getContext('2d');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function getSeason(){
+    const m = new Date().getMonth(); // 0=Jan
+    if([11,0,1].includes(m)) return 'winter';
+    if([2,3,4].includes(m)) return 'spring';
+    if([5,6,7].includes(m)) return 'rainy';
+    return 'autumn';
+  }
+  const season = getSeason();
+  const SEASON_TINT = { rainy:'rgba(91,143,214,0.05)', winter:'rgba(255,255,255,0.04)', spring:'rgba(255,122,174,0.04)', autumn:'rgba(228,87,46,0.04)' };
+
+  let w = 0, h = 0;
+  function resize(){
+    w = root.scrollWidth; h = root.scrollHeight;
+    canvas.width = w; canvas.height = h;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  if(window.ResizeObserver){ new ResizeObserver(resize).observe(root); }
+
+  if(reduceMotion){
+    ctx.fillStyle = SEASON_TINT[season];
+    ctx.fillRect(0,0,w,h);
+    return;
+  }
+
+  function makeParticle(fresh){
+    if(season==='rainy'){
+      return { x: Math.random()*w, y: fresh ? Math.random()*h : -20, len: 14+Math.random()*20, speed: 6+Math.random()*6, drift: 1+Math.random()*0.6, o: 0.10+Math.random()*0.16 };
+    }
+    if(season==='winter'){
+      return { x: Math.random()*w, y: fresh ? Math.random()*h : -10, r: 1+Math.random()*2.2, speed: 0.5+Math.random()*1.1, drift: Math.random()*0.6-0.3, o: 0.25+Math.random()*0.35 };
+    }
+    if(season==='spring'){
+      return { x: Math.random()*w, y: fresh ? Math.random()*h : -10, r: 2+Math.random()*2.2, speed: 0.4+Math.random()*0.7, sway: Math.random()*Math.PI*2, o: 0.2+Math.random()*0.25, c: Math.random()>0.5?'255,122,174':'255,209,102' };
+    }
+    return { x: Math.random()*w, y: fresh ? Math.random()*h : -10, r: 2.4+Math.random()*2.8, speed: 0.4+Math.random()*0.8, sway: Math.random()*Math.PI*2, o: 0.2+Math.random()*0.25, c: Math.random()>0.5?'228,87,46':'255,209,102' };
+  }
+  const COUNT = season==='rainy' ? 110 : season==='winter' ? 80 : 45;
+  let particles = [];
+  for(let i=0;i<COUNT;i++) particles.push(makeParticle(true));
+
+  function tick(){
+    ctx.clearRect(0,0,w,h);
+    particles.forEach(p=>{
+      if(season==='rainy'){
+        ctx.strokeStyle = `rgba(200,220,255,${p.o})`;
+        ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x - p.drift*p.len*0.25, p.y + p.len);
+        ctx.stroke();
+        p.y += p.speed; p.x -= p.drift*0.5;
+        if(p.y > h) Object.assign(p, makeParticle(false));
+      } else if(season==='winter'){
+        ctx.fillStyle = `rgba(255,255,255,${p.o})`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+        p.y += p.speed; p.x += p.drift;
+        if(p.y > h) Object.assign(p, makeParticle(false));
+      } else {
+        p.sway += 0.02;
+        ctx.fillStyle = `rgba(${p.c},${p.o})`;
+        ctx.beginPath(); ctx.arc(p.x + Math.sin(p.sway)*12, p.y, p.r, 0, 7); ctx.fill();
+        p.y += p.speed;
+        if(p.y > h) Object.assign(p, makeParticle(false));
+      }
+    });
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+
+/* ===== NEW: Group Types & Theme System ===== */
+(function(){
+const GROUP_TYPES = {
+  individual: { maxUsers: 1, label: 'Just Me', themeKey: 'personal', icon: '👤' },
+  couple:     { maxUsers: 2, label: 'Couple', themeKey: 'romantic', icon: '💑' },
+  friends:    { maxUsers: 8, label: 'Friends', themeKey: 'vibrant', icon: '👥' },
+  family:     { maxUsers: 8, label: 'Family', themeKey: 'cozy', icon: '👨‍👩‍👧‍👦' }
+};
+
+const THEME_PRESETS = {
+  romantic: {   // Couple - warm, intimate
+    bg: '#1a0f1a', panel: '#2a1a2a', panelLine: '#3a2a3a', cellEmpty: '#2a1a2a',
+    text: '#f1efe9', textDim: '#c2b8c2', textFaint: '#8a7a8a',
+    accent: '#ff7aae', accentSoft: 'rgba(255,122,174,0.12)',
+    moods: { pink:'#ff7aae', green:'#4fb286', yellow:'#ffd166', blue:'#5b8fd6', grey:'#7c8798', red:'#e4572e' },
+    seasonAccents: { spring:'rgba(255,122,174,0.10)', summer:'rgba(255,209,102,0.08)', autumn:'rgba(228,87,46,0.10)', winter:'rgba(91,143,214,0.08)' },
+    particles: 'hearts', particleColors: ['255,122,174', '255,209,102', '255,180,200']
+  },
+  vibrant: {    // Friends - energetic, social
+    bg: '#0f141f', panel: '#1a2332', panelLine: '#2a3a4a', cellEmpty: '#1a2332',
+    text: '#f1efe9', textDim: '#b8c2cc', textFaint: '#7a8a9a',
+    accent: '#00d4aa', accentSoft: 'rgba(0,212,170,0.12)',
+    moods: { pink:'#ff6b9d', green:'#00d4aa', yellow:'#ffd93d', blue:'#6bcbff', grey:'#95a5a6', red:'#ff6b6b' },
+    seasonAccents: { spring:'rgba(255,107,157,0.10)', summer:'rgba(255,217,61,0.08)', autumn:'rgba(255,107,107,0.10)', winter:'rgba(107,203,255,0.08)' },
+    particles: 'confetti', particleColors: ['255,107,157', '0,212,170', '255,217,61', '107,203,255']
+  },
+  cozy: {       // Family - warm, nurturing
+    bg: '#1a1f0f', panel: '#2a321a', panelLine: '#3a422a', cellEmpty: '#2a321a',
+    text: '#f1efe9', textDim: '#c2cab8', textFaint: '#8a8a7a',
+    accent: '#ffb347', accentSoft: 'rgba(255,179,71,0.12)',
+    moods: { pink:'#ffb347', green:'#77dd77', yellow:'#ffdf77', blue:'#779ecb', grey:'#bdbdbd', red:'#ff6961' },
+    seasonAccents: { spring:'rgba(255,179,71,0.10)', summer:'rgba(255,223,119,0.08)', autumn:'rgba(255,105,97,0.10)', winter:'rgba(119,158,203,0.08)' },
+    particles: 'leaves', particleColors: ['255,179,71', '119,221,119', '255,223,119', '119,158,203']
+  },
+  personal: {   // Individual - calm, focused
+    bg: '#14161f', panel: '#1c1f2b', panelLine: '#2a2e3d', cellEmpty: '#242836',
+    text: '#f1efe9', textDim: '#9298aa', textFaint: '#5c6178',
+    accent: '#8b5cf6', accentSoft: 'rgba(139,92,246,0.10)',
+    moods: { pink:'#f472b6', green:'#4ade80', yellow:'#facc15', blue:'#60a5fa', grey:'#9ca3af', red:'#f87171' },
+    seasonAccents: { spring:'rgba(244,114,182,0.08)', summer:'rgba(250,204,21,0.07)', autumn:'rgba(248,113,113,0.08)', winter:'rgba(96,165,250,0.07)' },
+    particles: 'minimal', particleColors: ['139,92,246', '244,114,182', '96,165,250']
+  }
+};
+
+const AGE_RANGES = ['18-24', '25-34', '35-44', '45-54', '55+'];
+const GENDER_OPTIONS = ['male', 'female', 'non-binary', 'prefer-not'];
+const PALETTE_PERSONALITIES = [
+  { id: 'warm', name: 'Warm', hue: 30, desc: 'Reds, oranges, yellows' },
+  { id: 'cool', name: 'Cool', hue: 210, desc: 'Blues, teals, purples' },
+  { id: 'earth', name: 'Earth', hue: 90, desc: 'Greens, browns, ochres' },
+  { id: 'vibrant', name: 'Vibrant', hue: 280, desc: 'Bright magentas, cyans' },
+  { id: 'pastel', name: 'Pastel', hue: 340, desc: 'Soft, muted tones' }
+];
+
+/* ===== EXISTING: Mood System ===== */
+const MOODS = {
+  pink:   { label:'Really good day',    hex:'#ff7aae', weight: 2   },
+  green:  { label:'Hardworking day',    hex:'#4fb286', weight: 1.5 },
+  yellow: { label:'Decent day',         hex:'#ffd166', weight: 1   },
+  blue:   { label:'A lazy day',         hex:'#5b8fd6', weight:-0.5 },
+  grey:   { label:'A sad day',          hex:'#7c8798', weight:-1   },
+  red:    { label:'A hard day',         hex:'#e4572e', weight:-2   }
+};
+const MOOD_ORDER = ['pink','green','yellow','blue','grey','red'];
+const DEFAULT_MOODS = JSON.parse(JSON.stringify(MOODS));
+const DOW_LABELS = ['M','T','W','T','F','S','S'];
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MILESTONES = [3,7,14,30,50,100,200,365];
+
+  function isNegMood(m){ return MOODS[m] && MOODS[m].weight < 0; }
+  function isPosMood(m){ return MOODS[m] && MOODS[m].weight > 0; }
+  function joinWords(arr){
+    if(arr.length === 0) return '';
+    if(arr.length === 1) return arr[0];
+    if(arr.length === 2) return arr[0] + ' or ' + arr[1];
+    return arr.slice(0,-1).join(', ') + ', or ' + arr[arr.length-1];
+  }
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function normalizeMap(raw){
+    const out = {};
+    Object.keys(raw||{}).forEach(k=>{
+      const v = raw[k];
+      if(typeof v === 'string'){
+        out[k] = { mood: v, note: '', tasks: [] };
+      } else {
+        out[k] = { mood: v.mood || null, note: v.note || '', tasks: Array.isArray(v.tasks) ? v.tasks : [] };
+      }
+    });
+    return out;
+  }
+  function makeTaskId(){
+    return (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : 't'+Date.now()+Math.random().toString(36).slice(2,8);
+  }
+  function makeUserId(){
+    return (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : 'u'+Date.now()+Math.random().toString(36).slice(2,8);
+  }
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const todayKey = toKey(today.getFullYear(), today.getMonth(), today.getDate());
+  let currentYear = today.getFullYear();
+  let moodMap = {};
+  let bestStreak = 0;
+  let lastRenderedStreak = -1;
+  let coupleConfig = null;
+  let activeProfile = null;
+
+  // New multi-user state
+  let groupConfig = null;
+  let currentUser = null;
+  let currentUserId = null;
+  let userMoods = {};
+  let allMembers = [];
+
+  // Legacy helpers (keep for migration)
+  function loadDeviceProfile(){ return localStorage.getItem('yic-device-profile-'+coupleId) || null; }
+  function saveDeviceProfile(p){ localStorage.setItem('yic-device-profile-'+coupleId, p); }
+
+  // New multi-user helpers
+  function getCurrentUserMoods(){ return userMoods[currentUserId] || {}; }
+  function setCurrentUserMoods(moods){ userMoods[currentUserId] = moods; moodMap = moods; }
+  function loadDeviceUserId(){ return localStorage.getItem('yic-device-userId-'+groupId) || null; }
+  function saveDeviceUserId(uid){ localStorage.setItem('yic-device-userId-'+groupId, uid); }
+  async function loadGroupConfig(){ return await getGroupConfig(); }
+  async function saveGroupConfig(cfg){ await setGroupConfig(cfg); }
+
+  const setupSlot = document.getElementById('yic-setup-slot');
+  const appBody = document.getElementById('yic-app-body');
+  const profileToggleEl = document.getElementById('yic-profile-toggle');
+  const quiltEl = document.getElementById('yic-quilt');
+  const statsEl = document.getElementById('yic-stats');
+  const yearLabel = document.getElementById('yic-year-label');
+  const popLayer = document.getElementById('yic-pop-layer');
+  const checkinSlot = document.getElementById('yic-checkin-slot');
+  const todayTasksSlot = document.getElementById('yic-today-tasks-slot');
+  const streakSlot = document.getElementById('yic-streak-slot');
+
+  function pad(n){ return n < 10 ? '0'+n : ''+n; }
+  function toKey(y,m,d){ return y+'-'+pad(m+1)+'-'+pad(d); }
+  function storageKey(profile, year){ return 'moods-'+profile+'-'+year; }
+  function bestStreakKey(profile){ return 'best-streak-alltime-'+profile; }
+
+  async function loadCoupleConfig(){
+    const res = await kvGet('couple-config');
+    return res && res.value ? res.value : null;
+  }
+  async function saveCoupleConfig(cfg){ await kvSet('couple-config', cfg); }
+
+  // New: per-user mood customization (by userId)
+  async function loadMoodCustom(userId){
+    const res = await kvGet('mood-custom-'+userId);
+    return res && res.value ? res.value : null;
+  }
+  async function saveMoodCustom(userId, custom){ await kvSet('mood-custom-'+userId, custom); }
+
+  function applyMoodCustom(custom){
+    MOOD_ORDER.forEach(k=>{
+      const c = custom && custom[k];
+      MOODS[k].label = (c && c.label) ? c.label : DEFAULT_MOODS[k].label;
+      MOODS[k].hex = (c && c.hex) ? c.hex : DEFAULT_MOODS[k].hex;
+      document.documentElement.style.setProperty('--'+k, MOODS[k].hex);
+    });
+  }
+
+  // Legacy: activateProfile for backwards compat
+  async function activateProfile(p){
+    activeProfile = p;
+    const custom = await loadMoodCustom(p);
+    applyMoodCustom(custom);
+    renderLegend();
+  }
+
+  // New: activate user by userId
+  async function activateUser(userId){
+    currentUserId = userId;
+    currentUser = allMembers.find(m => m.id === userId) || null;
+    if(!currentUser) return;
+    const custom = await loadMoodCustom(userId);
+    applyMoodCustom(custom);
+    moodMap = getCurrentUserMoods();
+    renderLegend();
+    renderProfileBar();
+  }
+
+  function renderLegend(){
+    const legendEl = document.getElementById('yic-legend');
+    if(!legendEl) return;
+    legendEl.innerHTML = MOOD_ORDER.map(k=>
+      `<div class="yic-legend-item"><span class="yic-swatch" style="background:${MOODS[k].hex}"></span> ${escapeHtml(MOODS[k].label)}</div>`
+    ).join('');
+  }
+
+  function refreshAllMoodDisplays(){
+    renderLegend(); renderQuilt(); renderStats(); renderCheckin(); renderTodayTasksPanel();
+  }
+
+  function openCustomizeModal(){
+    const backdrop = document.createElement('div');
+    backdrop.className = 'yic-modal-backdrop';
+    const otherName = coupleConfig[activeProfile==='a' ? 'b' : 'a'];
+    backdrop.innerHTML = `
+      <div class="yic-modal">
+        <h2>Make these colors yours</h2>
+        <p>Change what each color looks like and means to you — this only affects ${coupleConfig[activeProfile]}'s view. ${otherName} can set their own separately.</p>
+        <div id="yic-custom-rows"></div>
+        <div class="yic-modal-actions">
+          <button class="yic-modal-save" id="yic-custom-save">Save</button>
+          <button class="yic-modal-reset" id="yic-custom-reset">Reset to defaults</button>
+          <button class="yic-modal-close" id="yic-custom-close">Close</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(backdrop);
+    const rows = backdrop.querySelector('#yic-custom-rows');
+    MOOD_ORDER.forEach(k=>{
+      const row = document.createElement('div');
+      row.className = 'yic-custom-row';
+      row.innerHTML = `<input type="color" value="${MOODS[k].hex}" data-k="${k}"/><input type="text" value="${escapeHtml(MOODS[k].label)}" maxlength="30" data-k="${k}"/>`;
+      rows.appendChild(row);
+    });
+    backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop) backdrop.remove(); });
+    backdrop.querySelector('#yic-custom-close').addEventListener('click', ()=> backdrop.remove());
+    backdrop.querySelector('#yic-custom-reset').addEventListener('click', async ()=>{
+      applyMoodCustom(null);
+      await saveMoodCustom(activeProfile, null);
+      refreshAllMoodDisplays();
+      backdrop.remove();
+    });
+    backdrop.querySelector('#yic-custom-save').addEventListener('click', async ()=>{
+      const custom = {};
+      MOOD_ORDER.forEach(k=>{
+        const colorInput = rows.querySelector(`input[type=color][data-k="${k}"]`);
+        const textInput = rows.querySelector(`input[type=text][data-k="${k}"]`);
+        custom[k] = { hex: colorInput.value, label: textInput.value.trim() || DEFAULT_MOODS[k].label };
+      });
+      applyMoodCustom(custom);
+      await saveMoodCustom(activeProfile, custom);
+      refreshAllMoodDisplays();
+      backdrop.remove();
+    });
+  }
+
+  function renderLandingChoice(){
+    setupSlot.innerHTML = `
+      <div class="yic-setup">
+        <h2>Welcome to Year in Color</h2>
+        <p>Track daily moods, notes & tasks — solo, as a couple, with friends, or family.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:16px 0;">
+          ${Object.entries(GROUP_TYPES).map(([key, gt])=>`<button class="yic-group-type-btn" data-type="${key}" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px;background:var(--panel);border:1.5px solid var(--panel-line);border-radius:10px;cursor:pointer;transition:all .15s;"><span style="font-size:28px;">${gt.icon}</span><strong>${gt.label}</strong><small style="color:var(--text-faint);">${gt.maxUsers===1?'Just you':`Up to ${gt.maxUsers} people`}</small></button>`).join('')}
+        </div>
+        <button id="yic-join-existing" style="width:100%;margin-top:10px;background:none;border:1.5px solid var(--panel-line);color:var(--text);padding:12px;border-radius:8px;">I already have an invite link</button>
+        <div id="yic-join-form" style="display:none;margin-top:16px;">
+          <label>Paste your invite link (or just the code after ?g=)</label>
+          <input id="yic-join-input" placeholder="https://... or the code itself"/>
+          <button id="yic-join-submit">Continue</button>
+          <p id="yic-join-error" style="color:var(--red);font-size:12px;display:none;margin-top:8px;"></p>
+        </div>
+      </div>
+    `;
+    // Group type selection
+    setupSlot.querySelectorAll('.yic-group-type-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        setupSlot.querySelectorAll('.yic-group-type-btn').forEach(b=>b.style.borderColor='var(--panel-line)');
+        btn.style.borderColor = 'var(--pink)';
+        btn.style.background = 'rgba(255,122,174,0.08)';
+        renderGroupSetup(btn.dataset.type);
+      });
+    });
+    document.getElementById('yic-join-existing').addEventListener('click', ()=>{
+      document.getElementById('yic-join-form').style.display = '';
+    });
+    document.getElementById('yic-join-submit').addEventListener('click', async ()=>{
+      const raw = document.getElementById('yic-join-input').value.trim();
+      const errEl = document.getElementById('yic-join-error');
+      errEl.style.display = 'none';
+      if(!raw) return;
+      let id = raw;
+      try{
+        if(raw.includes('?g=') || raw.includes('&g=')){
+          const qIndex = raw.indexOf('?');
+          const qs = qIndex >= 0 ? raw.slice(qIndex+1) : raw;
+          const found = new URLSearchParams(qs).get('g');
+          if(found) id = found;
+        }
+      }catch(e){ /* treat raw input as the code itself */ }
+
+      persistGroupId(id);
+      let cfg;
+      try{ cfg = await loadGroupConfig(); }catch(e){ cfg = null; }
+      if(!cfg){
+        errEl.textContent = "Couldn't find a group for that link — double check it, or start a new one instead.";
+        errEl.style.display = '';
+        localStorage.removeItem('yic-last-groupId');
+        groupId = null;
+        const p = new URLSearchParams(window.location.search);
+        p.delete('g');
+        history.replaceState(null, '', window.location.pathname + (p.toString() ? '?'+p.toString() : ''));
+        return;
+      }
+      groupConfig = cfg;
+      allMembers = groupConfig.members || [];
+      const savedUserId = loadDeviceUserId();
+      if(!savedUserId){ renderWhoAmI(); return; }
+      await activateUser(savedUserId);
+      setupSlot.innerHTML = '';
+      appBody.style.display = '';
+      await loadBestStreak();
+      await loadYear(currentYear);
+    });
+  }
+
+  function renderGroupSetup(type){
+    const gt = GROUP_TYPES[type];
+    const maxUsers = gt.maxUsers;
+    let memberInputs = '';
+    for(let i=0;i<maxUsers;i++){
+      memberInputs += `
+        <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">
+          <span style="width:28px;height:28px;border-radius:50%;background:var(--panel-line);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-dim);flex-shrink:0;">${i+1}</span>
+          <input id="yic-member-${i}" placeholder="${i===0?'Your name':`Member ${i+1} name`}" maxlength="24" style="flex:1;"/>
+          ${i < maxUsers-1 && type !== 'individual' ? `<label style="font-size:11px;color:var(--text-faint);width:80px;text-align:center;">${AGE_RANGES[1]}</label>
+          <select id="yic-age-${i}" style="width:80px;background:#1c1f2b;border:1px solid #363c50;border-radius:6px;color:var(--text);font-size:12px;padding:6px;">
+            ${AGE_RANGES.map(a=>`<option value="${a}" ${a===AGE_RANGES[1]?'selected':''}>${a}</option>`).join('')}
+          </select>
+          <select id="yic-gender-${i}" style="width:100px;background:#1c1f2b;border:1px solid #363c50;border-radius:6px;color:var(--text);font-size:12px;padding:6px;">
+            ${GENDER_OPTIONS.map(g=>`<option value="${g}">${g}</option>`).join('')}
+          </select>` : ''}
+        </div>`;
+    }
+    setupSlot.innerHTML = `
+      <div class="yic-setup">
+        <h2>Set up your ${gt.label}</h2>
+        <p>Add names for each member. ${type === 'individual' ? '' : 'You can add more members later in Settings.'}</p>
+        ${memberInputs}
+        <button id="yic-setup-save" style="margin-top:8px;">Create ${gt.label}</button>
+      </div>
+    `;
+    document.getElementById('yic-setup-save').addEventListener('click', async ()=>{
+      const members = [];
+      for(let i=0;i<maxUsers;i++){
+        const nameInput = document.getElementById(`yic-member-${i}`);
+        const name = nameInput?.value?.trim();
+        if(!name) continue;
+        const ageRange = document.getElementById(`yic-age-${i}`)?.value || AGE_RANGES[1];
+        const gender = document.getElementById(`yic-gender-${i}`)?.value || 'prefer-not';
+        const userId = makeUserId();
+        members.push({
+          id: userId,
+          name,
+          displayName: name,
+          avatar: '👤',
+          ageRange,
+          gender,
+          role: i===0 ? 'owner' : 'member',
+          colorIndex: i % MOOD_ORDER.length,
+          joinedAt: new Date().toISOString().split('T')[0]
+        });
+      }
+      if(members.length === 0) return;
+      groupConfig = {
+        id: groupId,
+        type,
+        name: `${members[0].name}'s ${gt.label}`,
+        members,
+        createdAt: new Date().toISOString().split('T')[0],
+        settings: { theme: 'auto', remindersEnabled: true, reminderTime: '20:00', visibility: 'private' },
+        themeCustomization: {}
+      };
+      await saveGroupConfig(groupConfig);
+      allMembers = members;
+      currentUserId = members[0].id;
+      currentUser = members[0];
+      saveDeviceUserId(currentUserId);
+      await activateUser(currentUserId);
+      showShareScreen();
+    });
+  }
+
+  function showShareScreen(){
+    setupSlot.innerHTML = `
+      <div class="yic-setup">
+        <h2>Send this link to ${coupleConfig.b}</h2>
+        <p>They open it on their own device, pick their name, and you're both logging into the same tracker.</p>
+        <div class="yic-share-box">${shareUrl()}</div>
+        <button id="yic-copy-share">Copy link</button>
+      </div>
+    `;
+    document.getElementById('yic-copy-share').addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(shareUrl()); }catch(e){}
+      const btn = document.getElementById('yic-copy-share');
+      btn.textContent = 'Copied!';
+      setTimeout(async ()=>{
+        setupSlot.innerHTML = '';
+        appBody.style.display = '';
+        renderProfileToggle();
+        await loadBestStreak();
+        await loadYear(currentYear);
+      }, 900);
+    });
+  }
+
+  function renderWhoAmI(){
+    setupSlot.innerHTML = `
+      <div class="yic-setup">
+        <h2>Who's logging on this device?</h2>
+        <p>Each device remembers who it belongs to, so you don't have to pick every time.</p>
+        <div class="yic-whoami-btns">
+          <button data-p="a">${coupleConfig.a}</button>
+          <button data-p="b">${coupleConfig.b}</button>
+        </div>
+      </div>
+    `;
+    setupSlot.querySelectorAll('.yic-whoami-btns button').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        await activateProfile(btn.dataset.p);
+        saveDeviceProfile(activeProfile);
+        setupSlot.innerHTML = '';
+        appBody.style.display = '';
+        renderProfileToggle();
+        await loadBestStreak();
+        await loadYear(currentYear);
+      });
+    });
+  }
+
+  function renderProfileToggle(){
+    profileToggleEl.innerHTML = `
+      <button data-p="a" class="${activeProfile==='a'?'yic-active':''}">${coupleConfig.a}</button>
+      <button data-p="b" class="${activeProfile==='b'?'yic-active':''}">${coupleConfig.b}</button>
+    `;
+    profileToggleEl.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        if(btn.dataset.p === activeProfile) return;
+        await activateProfile(btn.dataset.p);
+        renderProfileToggle();
+        await loadBestStreak();
+        await loadYear(currentYear);
+      });
+    });
+  }
+  document.getElementById('yic-customize-btn').addEventListener('click', openCustomizeModal);
+  document.getElementById('yic-switch-who-btn').addEventListener('click', ()=>{
+    saveDeviceProfile('');
+    appBody.style.display = 'none';
+    renderWhoAmI();
+  });
+  document.getElementById('yic-share-link-btn').addEventListener('click', async ()=>{
+    try{ await navigator.clipboard.writeText(shareUrl()); }catch(e){}
+    const btn = document.getElementById('yic-share-link-btn');
+    const old = btn.textContent; btn.textContent = 'copied!';
+    setTimeout(()=> btn.textContent = old, 1400);
+  });
+
+  async function fetchYearMap(profile, year){
+    const res = await kvGet(storageKey(profile, year));
+    return normalizeMap(res && res.value ? res.value : {});
+  }
+  async function loadYear(year){
+    quiltEl.innerHTML = '<div class="yic-empty-note" style="padding:20px;">Loading your year…</div>';
+    moodMap = await fetchYearMap(activeProfile, year);
+    renderCheckin(); renderQuilt(); renderStats(); refreshStreak(); renderTodayTasksPanel();
+  }
+  async function saveMoodMap(){ await kvSet(storageKey(activeProfile, currentYear), moodMap); }
+  async function loadBestStreak(){
+    const res = await kvGet(bestStreakKey(activeProfile));
+    bestStreak = res && res.value ? (parseInt(res.value,10)||0) : 0;
+  }
+  async function saveBestStreak(){ await kvSet(bestStreakKey(activeProfile), String(bestStreak)); }
+
+  function setMood(key, mood, note){
+    const existingTasks = (moodMap[key] && moodMap[key].tasks) || [];
+    moodMap[key] = { mood, note: (note||'').slice(0,200), tasks: existingTasks };
+    saveMoodMap(); refreshStreak();
+  }
+  function clearMood(key){ delete moodMap[key]; saveMoodMap(); refreshStreak(); }
+  function setTasks(key, tasks){
+    const existing = moodMap[key] || { mood:null, note:'', tasks:[] };
+    moodMap[key] = { ...existing, tasks };
+    saveMoodMap();
+  }
+
+  async function refreshStreak(){
+    const yearA = today.getFullYear(), yearB = yearA - 1;
+    const mapA = currentYear === yearA ? moodMap : await fetchYearMap(activeProfile, yearA);
+    const mapB = currentYear === yearB ? moodMap : await fetchYearMap(activeProfile, yearB);
+    function lookup(key){
+      const y = parseInt(key.slice(0,4),10);
+      const m = y===yearA ? mapA : (y===yearB ? mapB : null);
+      return m ? m[key] : null;
+    }
+    let cursor = new Date(today);
+    const loggedToday = !!lookup(todayKey);
+    if(!loggedToday) cursor.setDate(cursor.getDate()-1);
+    let streak = 0;
+    while(true){
+      const key = toKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+      if(lookup(key)){ streak++; cursor.setDate(cursor.getDate()-1); } else break;
+    }
+    let isRecord = false;
+    if(streak > bestStreak){ bestStreak = streak; isRecord = true; saveBestStreak(); }
+    const shouldCelebrate = streak > lastRenderedStreak && MILESTONES.includes(streak);
+    lastRenderedStreak = streak;
+    renderStreakUI(streak, loggedToday, isRecord);
+    if(shouldCelebrate) celebrate();
+  }
+
+  function renderStreakUI(streak, loggedToday, isRecord){
+    let sub = '';
+    if(!loggedToday) sub = `<span class="yic-streak-sub yic-streak-warn">Log today to keep it going</span>`;
+    else if(isRecord && streak > 0) sub = `<span class="yic-streak-sub yic-streak-best">New best — nice work</span>`;
+    else sub = `<span class="yic-streak-sub">Best: ${bestStreak} day${bestStreak===1?'':'s'}</span>`;
+    const profileName = coupleConfig[activeProfile];
+    streakSlot.innerHTML = `
+      <div class="yic-streak">
+        <div class="yic-streak-flame">🔥</div>
+        <div class="yic-streak-text">
+          <div class="yic-streak-main"><span class="yic-streak-num" id="yic-streak-num">0</span>day streak — ${profileName}</div>
+          ${sub}
+        </div>
+      </div>
+    `;
+    animateCount(document.getElementById('yic-streak-num'), streak, ' ');
+  }
+
+  function celebrate(){
+    const flame = document.querySelector('.yic-streak-flame');
+    if(!flame) return;
+    const rect = flame.getBoundingClientRect();
+    const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+    const colors = MOOD_ORDER.map(k=>MOODS[k].hex);
+    for(let i=0;i<20;i++){
+      const el = document.createElement('div');
+      el.className = 'yic-confetti';
+      const angle = Math.random()*Math.PI*2, dist = 45 + Math.random()*70;
+      el.style.setProperty('--tx', Math.cos(angle)*dist + 'px');
+      el.style.setProperty('--ty', Math.sin(angle)*dist + 'px');
+      el.style.setProperty('--rot', (Math.random()*360) + 'deg');
+      el.style.left = cx + 'px'; el.style.top = cy + 'px';
+      el.style.background = colors[i % colors.length];
+      document.body.appendChild(el);
+      setTimeout(()=> el.remove(), 950);
+    }
+  }
+
+  function renderCheckin(){
+    checkinSlot.innerHTML = '';
+    if(currentYear !== today.getFullYear() || moodMap[todayKey]) return;
+    const box = document.createElement('div');
+    box.className = 'yic-checkin';
+    box.innerHTML = `
+      <div class="yic-checkin-row">
+        <div class="yic-checkin-text">How was <b>today</b> for ${coupleConfig[activeProfile]} (${todayKey})?</div>
+        <div class="yic-checkin-dots" id="yic-checkin-dots"></div>
+      </div>
+    `;
+    const dotsWrap = box.querySelector('#yic-checkin-dots');
+    MOOD_ORDER.forEach(m=>{
+      const b = document.createElement('button');
+      b.style.background = MOODS[m].hex;
+      b.title = MOODS[m].label;
+      b.addEventListener('click', ()=>{
+        setMood(todayKey, m, '');
+        const cell = quiltEl.querySelector('[data-date="'+todayKey+'"]');
+        if(cell){ cell.className = 'yic-day yic-mood-'+m+' yic-today yic-just-set'; }
+        renderStats();
+        showCheckinNoteStage(box, m);
+      });
+      dotsWrap.appendChild(b);
+    });
+    checkinSlot.appendChild(box);
+  }
+
+  function showCheckinNoteStage(box, moodKey){
+    box.innerHTML = `
+      <div class="yic-checkin-text">Logged as <b>${MOODS[moodKey].label.toLowerCase()}</b>. Want to leave a short note about today?</div>
+      <textarea class="yic-checkin-note" rows="2" maxlength="200" placeholder="What made today feel this way?"></textarea>
+      <div class="yic-checkin-actions">
+        <button class="yic-checkin-save" id="yic-checkin-save-btn">Save note</button>
+        <button class="yic-checkin-skip" id="yic-checkin-skip-btn">skip</button>
+      </div>
+    `;
+    const textarea = box.querySelector('.yic-checkin-note');
+    textarea.focus();
+    box.querySelector('#yic-checkin-save-btn').addEventListener('click', ()=>{
+      setMood(todayKey, moodKey, textarea.value.trim());
+      const cell = quiltEl.querySelector('[data-date="'+todayKey+'"]');
+      if(cell) updateCellIndicators(cell, moodMap[todayKey]);
+      dismissCheckin();
+    });
+    box.querySelector('#yic-checkin-skip-btn').addEventListener('click', dismissCheckin);
+  }
+  function dismissCheckin(){
+    const box = checkinSlot.querySelector('.yic-checkin');
+    if(!box) return;
+    box.classList.add('yic-checkin-out');
+    setTimeout(()=> checkinSlot.innerHTML = '', 350);
+  }
+
+  function renderTaskSection(container, key){
+    const entry = moodMap[key] || { mood:null, note:'', tasks:[] };
+    const tasks = entry.tasks || [];
+    const doneCount = tasks.filter(t=>t.done).length;
+    container.innerHTML = `
+      ${tasks.length ? `<div class="yic-task-progress">${doneCount}/${tasks.length} done</div>` : `<div class="yic-task-empty">No tasks yet for this day</div>`}
+      <div class="yic-tasklist">
+        ${tasks.map(t=>`
+          <div class="yic-task-row" data-id="${t.id}">
+            <button class="yic-task-check ${t.done?'yic-done':''}" data-action="toggle" aria-label="toggle task"></button>
+            <span class="yic-task-text ${t.done?'yic-done':''}">${escapeHtml(t.text)}</span>
+            <button class="yic-task-del" data-action="del" aria-label="delete task">×</button>
+          </div>
+        `).join('')}
+      </div>
+      <div class="yic-task-add-row">
+        <input class="yic-task-add-input" placeholder="Add a task…" maxlength="120"/>
+        <button class="yic-task-add-btn">Add</button>
+      </div>
+    `;
+    container.querySelectorAll('[data-action="toggle"]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.closest('.yic-task-row').dataset.id;
+        const updated = tasks.map(t=> t.id===id ? {...t, done: !t.done} : t);
+        commitTasks(key, updated, container);
+      });
+    });
+    container.querySelectorAll('[data-action="del"]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.closest('.yic-task-row').dataset.id;
+        const updated = tasks.filter(t=> t.id!==id);
+        commitTasks(key, updated, container);
+      });
+    });
+    const input = container.querySelector('.yic-task-add-input');
+    const addBtn = container.querySelector('.yic-task-add-btn');
+    function addTask(){
+      const text = input.value.trim();
+      if(!text) return;
+      const updated = [...tasks, { id: makeTaskId(), text, done:false }];
+      commitTasks(key, updated, container);
+    }
+    addBtn.addEventListener('click', addTask);
+    input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); addTask(); } });
+  }
+
+  function commitTasks(key, updatedTasks, container){
+    setTasks(key, updatedTasks);
+    const cell = quiltEl.querySelector('[data-date="'+key+'"]');
+    if(cell) updateCellIndicators(cell, moodMap[key]);
+    renderTaskSection(container, key);
+    if(key === todayKey && container.id !== 'yic-today-tasks-inner') renderTodayTasksPanel();
+  }
+
+  function renderTodayTasksPanel(){
+    if(!todayTasksSlot) return;
+    if(currentYear !== today.getFullYear()){ todayTasksSlot.innerHTML = ''; return; }
+    todayTasksSlot.innerHTML = `
+      <div class="yic-tasks-panel">
+        <div class="yic-tasks-panel-title">Today's checklist</div>
+        <div id="yic-today-tasks-inner"></div>
+      </div>
+    `;
+    renderTaskSection(document.getElementById('yic-today-tasks-inner'), todayKey);
+  }
+  function updateCellIndicators(cell, entry){
+    cell.querySelectorAll('.yic-note-dot, .yic-task-badge').forEach(el=> el.remove());
+    const note = entry && entry.note;
+    const tasks = (entry && entry.tasks) || [];
+    if(note){ const dot = document.createElement('span'); dot.className = 'yic-note-dot'; cell.appendChild(dot); }
+    if(tasks.length){
+      const allDone = tasks.every(t=>t.done);
+      const badge = document.createElement('span');
+      badge.className = 'yic-task-badge' + (allDone ? ' yic-task-all-done' : '');
+      cell.appendChild(badge);
+    }
+    const titleParts = [cell.dataset.date];
+    if(note) titleParts.push('"' + note + '"');
+    if(tasks.length) titleParts.push(tasks.filter(t=>t.done).length + '/' + tasks.length + ' tasks done');
+    cell.title = titleParts.join('\n');
+  }
+
+  function daysInMonth(year, month){ return new Date(year, month+1, 0).getDate(); }
+  function mondayIndex(jsDow){ return (jsDow + 6) % 7; }
+
+  function renderQuilt(){
+    quiltEl.innerHTML = '';
+    for(let m=0; m<12; m++){
+      const monthBlock = document.createElement('div');
+      monthBlock.className = 'yic-month';
+      monthBlock.style.animationDelay = (m*35)+'ms';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'yic-month-name'; nameEl.textContent = MONTH_NAMES[m];
+      monthBlock.appendChild(nameEl);
+      const dowRow = document.createElement('div');
+      dowRow.className = 'yic-dow-row';
+      DOW_LABELS.forEach(l=>{ const d = document.createElement('div'); d.className='yic-dow'; d.textContent=l; dowRow.appendChild(d); });
+      monthBlock.appendChild(dowRow);
+      const daysWrap = document.createElement('div');
+      daysWrap.className = 'yic-days';
+      const first = new Date(currentYear, m, 1);
+      const leadingBlanks = mondayIndex(first.getDay());
+      for(let i=0;i<leadingBlanks;i++){ const blank=document.createElement('div'); blank.className='yic-day yic-blank'; daysWrap.appendChild(blank); }
+      const totalDays = daysInMonth(currentYear, m);
+      for(let d=1; d<=totalDays; d++){
+        const cellDate = new Date(currentYear, m, d);
+        const key = toKey(currentYear, m, d);
+        const cell = document.createElement('div');
+        cell.className = 'yic-day'; cell.dataset.date = key; cell.title = key;
+        const isFuture = cellDate.getTime() > today.getTime();
+        if(isFuture){ cell.classList.add('yic-future'); }
+        else { cell.addEventListener('click', (ev)=> openPopover(ev, cell, key)); }
+        if(key === todayKey){ cell.classList.add('yic-today'); }
+        const entry = moodMap[key];
+        if(entry && entry.mood){ cell.classList.add('yic-mood-'+entry.mood); }
+        if(entry){ updateCellIndicators(cell, entry); }
+        daysWrap.appendChild(cell);
+      }
+      monthBlock.appendChild(daysWrap);
+      quiltEl.appendChild(monthBlock);
+    }
+  }
+
+  function closePopover(){ popLayer.innerHTML = ''; document.removeEventListener('click', onDocClick, true); }
+  function onDocClick(e){ if(!e.target.closest('.yic-pop') && !e.target.closest('.yic-day')){ closePopover(); } }
+
+  function openPopover(ev, cellEl, key){
+    ev.stopPropagation();
+    popLayer.innerHTML = '';
+    const existing = moodMap[key] || { mood:null, note:'' };
+    let selectedMood = existing.mood;
+    const pop = document.createElement('div');
+    pop.className = 'yic-pop';
+    const dateLabel = document.createElement('div');
+    dateLabel.className = 'yic-pop-date'; dateLabel.textContent = key;
+    pop.appendChild(dateLabel);
+    const moodsWrap = document.createElement('div');
+    moodsWrap.className = 'yic-pop-moods';
+    MOOD_ORDER.forEach(mk=>{
+      const btn = document.createElement('button');
+      btn.className = 'yic-pop-mood-btn' + (selectedMood===mk ? ' yic-selected' : '');
+      btn.style.background = MOODS[mk].hex; btn.title = MOODS[mk].label;
+      btn.addEventListener('click', ()=>{
+        selectedMood = mk;
+        moodsWrap.querySelectorAll('.yic-pop-mood-btn').forEach(b=>b.classList.remove('yic-selected'));
+        btn.classList.add('yic-selected');
+      });
+      moodsWrap.appendChild(btn);
+    });
+    pop.appendChild(moodsWrap);
+    const noteArea = document.createElement('textarea');
+    noteArea.className = 'yic-pop-note'; noteArea.rows = 2; noteArea.maxLength = 200;
+    noteArea.placeholder = 'Short note about this day (optional)';
+    noteArea.value = existing.note || '';
+    pop.appendChild(noteArea);
+
+    const taskDivider = document.createElement('div');
+    taskDivider.className = 'yic-pop-divider';
+    pop.appendChild(taskDivider);
+    const taskContainer = document.createElement('div');
+    pop.appendChild(taskContainer);
+    renderTaskSection(taskContainer, key);
+
+    const actions = document.createElement('div'); actions.className = 'yic-pop-actions';
+    const saveBtn = document.createElement('button'); saveBtn.className = 'yic-pop-save'; saveBtn.textContent = 'Save';
+    saveBtn.addEventListener('click', ()=>{
+      if(!selectedMood) return;
+      setMood(key, selectedMood, noteArea.value.trim());
+      cellEl.className = 'yic-day yic-mood-'+selectedMood+(key===todayKey ? ' yic-today':'')+' yic-just-set';
+      updateCellIndicators(cellEl, moodMap[key]);
+      renderStats();
+      if(key===todayKey) dismissCheckin();
+      closePopover();
+    });
+    const clearBtn = document.createElement('button'); clearBtn.className = 'yic-pop-clear'; clearBtn.textContent = 'Clear';
+    clearBtn.addEventListener('click', ()=>{
+      clearMood(key);
+      cellEl.className = 'yic-day'+(key===todayKey ? ' yic-today':'');
+      updateCellIndicators(cellEl, null);
+      renderStats();
+      if(key===todayKey) renderTodayTasksPanel();
+      closePopover();
+    });
+    actions.appendChild(saveBtn); actions.appendChild(clearBtn);
+    pop.appendChild(actions);
+    popLayer.appendChild(pop);
+    const rect = cellEl.getBoundingClientRect();
+    const popRect = pop.getBoundingClientRect();
+    let left = rect.left + rect.width/2 - popRect.width/2;
+    let top = rect.bottom + 8;
+    left = Math.max(8, Math.min(left, window.innerWidth - popRect.width - 8));
+    if(top + popRect.height > window.innerHeight - 8){ top = rect.top - popRect.height - 8; }
+    pop.style.left = left + 'px'; pop.style.top = top + 'px';
+    setTimeout(()=> document.addEventListener('click', onDocClick, true), 0);
+  }
+
+  function isNextDay(prevDate, curDate){ return (curDate.getTime() - prevDate.getTime()) === 86400000; }
+  function computeLongestStreaks(sortedMoodEntries){
+    const maxLen = {}, maxEnd = {};
+    let prevDate=null, prevMood=null, curLen=0;
+    sortedMoodEntries.forEach(([d,m])=>{
+      const parts = d.split('-').map(Number);
+      const dateObj = new Date(parts[0], parts[1]-1, parts[2]);
+      if(prevDate && m===prevMood && isNextDay(prevDate,dateObj)){ curLen++; } else { curLen = 1; }
+      if(curLen > (maxLen[m]||0)){ maxLen[m]=curLen; maxEnd[m]=d; }
+      prevDate = dateObj; prevMood = m;
+    });
+    return { maxLen, maxEnd };
+  }
+  function animateCount(el, target, suffix){
+    const dur = 600; const start = performance.now();
+    function frame(now){
+      const p = Math.min(1, (now-start)/dur);
+      const val = Math.round(target * (1 - Math.pow(1-p,3)));
+      el.textContent = val + (suffix||'');
+      if(p<1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function renderStats(){
+    const rawEntries = Object.entries(moodMap);
+    yearLabel.textContent = currentYear;
+    if(rawEntries.length === 0){
+      statsEl.innerHTML = `
+        <h2 class="yic-stats-head">${coupleConfig[activeProfile]}'s ${currentYear} — nothing logged yet</h2>
+        <p class="yic-empty-note">Click a few days above to start. Once you've logged some, patterns and suggestions will build up here automatically — day by day.</p>
+      `;
+      return;
+    }
+    const entries = rawEntries.map(([d,e])=>[d, e.mood]).filter(([,m])=>m);
+    entries.sort((a,b)=> a[0] < b[0] ? -1 : 1);
+    const counts = {}; MOOD_ORDER.forEach(k=> counts[k]=0);
+    entries.forEach(([,m])=>{ if(counts[m] !== undefined) counts[m]++; });
+    const total = entries.length;
+    const recent = entries.slice(-30);
+    const recentTotal = recent.length;
+    const recentNegCount = recent.filter(([,m])=> isNegMood(m)).length;
+    const recentPosCount = recent.filter(([,m])=> isPosMood(m)).length;
+    const recentNegPct = recentTotal ? Math.round((recentNegCount / recentTotal) * 100) : 0;
+    const recentPosPct = recentTotal ? Math.round((recentPosCount / recentTotal) * 100) : 0;
+    let streakLen = 0, streakMood = null;
+    if(entries.length){
+      const [lastDate, lastMood] = entries[entries.length-1];
+      streakMood = lastMood;
+      const lp = lastDate.split('-').map(Number);
+      let cursor = new Date(lp[0], lp[1]-1, lp[2]);
+      for(let i=entries.length-1; i>=0; i--){
+        const [d, m] = entries[i];
+        const expected = toKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+        if(d === expected && m === lastMood){ streakLen++; cursor.setDate(cursor.getDate() - 1); }
+        else if(d === expected){ break; }
+      }
+    }
+    const dowNeg = [0,0,0,0,0,0,0], dowTotal = [0,0,0,0,0,0,0];
+    entries.forEach(([d,m])=>{
+      const parts = d.split('-').map(Number);
+      const dt = new Date(parts[0], parts[1]-1, parts[2]);
+      const dow = dt.getDay();
+      dowTotal[dow]++;
+      if(isNegMood(m)) dowNeg[dow]++;
+    });
+    let worstDow = -1, worstRatio = 0;
+    for(let i=0;i<7;i++){ if(dowTotal[i] >= 3){ const ratio = dowNeg[i]/dowTotal[i]; if(ratio > worstRatio){ worstRatio = ratio; worstDow = i; } } }
+    const { maxLen, maxEnd } = computeLongestStreaks(entries);
+    const posMoods = MOOD_ORDER.filter(isPosMood);
+    const negMoods = MOOD_ORDER.filter(isNegMood);
+    const bestPosMood = posMoods.reduce((best,k)=> (maxLen[k]||0) > (maxLen[best]||0) ? k : best, posMoods[0]);
+    const bestNegMood = negMoods.reduce((best,k)=> (maxLen[k]||0) > (maxLen[best]||0) ? k : best, negMoods[0]);
+    const now = new Date();
+    const curMonth = now.getMonth(), curYearForMonth = now.getFullYear();
+    let prevMonth = curMonth-1, prevMonthYear = curYearForMonth;
+    if(prevMonth < 0){ prevMonth = 11; prevMonthYear -= 1; }
+    function avgWeightForMonth(y,mo){
+      const list = entries.filter(([d])=>{ const p=d.split('-').map(Number); return p[0]===y && (p[1]-1)===mo; });
+      if(list.length < 3) return null;
+      const sum = list.reduce((s,[,m])=> s + MOODS[m].weight, 0);
+      return sum/list.length;
+    }
+    const curAvg = currentYear===curYearForMonth ? avgWeightForMonth(curYearForMonth, curMonth) : null;
+    const prevAvg = avgWeightForMonth(prevMonthYear, prevMonth);
+    const negLabelsPhrase = joinWords(negMoods.map(k=>MOODS[k].label.toLowerCase()));
+    const posLabelsPhrase = joinWords(posMoods.map(k=>MOODS[k].label.toLowerCase()));
+    const insights = [];
+    if(recentTotal >= 5 && recentNegPct >= 50){
+      insights.push(`Over your last ${recentTotal} logged days, ${recentNegPct}% were ${negLabelsPhrase} type days. If that stretch has felt heavy, try deliberately lightening your load this week, or talking things through with someone you trust. If it's sustained and hard to shake, a conversation with a doctor or counselor is a reasonable next step too.`);
+    } else if(recentTotal >= 5 && recentPosPct >= 65){
+      insights.push(`${recentPosPct}% of your last ${recentTotal} days were ${posLabelsPhrase} type days — a genuinely good stretch. Worth noting what's been different lately so you can point back to it later.`);
+    }
+    if(streakLen >= 3 && isNegMood(streakMood)){
+      insights.push(`You're on a ${streakLen}-day run of ${MOODS[streakMood].label.toLowerCase()}s right now. A short run isn't unusual, but if it stretches further, it's worth checking in with yourself about sleep, workload, or what else might be driving it.`);
+    } else if(streakLen >= 3){
+      insights.push(`You're on a ${streakLen}-day run of ${MOODS[streakMood].label.toLowerCase()}s — nice consistency. Notice what's contributing to it.`);
+    }
+    if(worstDow !== -1 && worstRatio >= 0.5){
+      insights.push(`${DOW_FULL[worstDow]}s have been your toughest day of the week this year (${negLabelsPhrase} ${Math.round(worstRatio*100)}% of the time). Might be worth looking at what tends to load up on that day.`);
+    }
+    if((maxLen[bestNegMood]||0) >= 3){ insights.push(`Your longest rough stretch this year was ${maxLen[bestNegMood]} ${MOODS[bestNegMood].label.toLowerCase()}s in a row, ending ${maxEnd[bestNegMood]}.`); }
+    if((maxLen[bestPosMood]||0) >= 4){ insights.push(`Your best stretch this year was ${maxLen[bestPosMood]} ${MOODS[bestPosMood].label.toLowerCase()}s in a row, ending ${maxEnd[bestPosMood]}.`); }
+    if(curAvg !== null && prevAvg !== null){
+      const diff = curAvg - prevAvg;
+      if(diff >= 0.5) insights.push(`This month is trending noticeably better than last month.`);
+      else if(diff <= -0.5) insights.push(`This month is trending lower than last month — worth a moment to reflect on what's changed.`);
+    }
+    if(total < 14){ insights.push(`You've logged ${total} day${total===1?'':'s'} so far this year. The more consistently you log — even on ordinary days — the more useful these patterns get.`); }
+    if(insights.length === 0){ insights.push(`Your colors this year look fairly balanced so far — no strong pattern standing out yet. Keep logging and check back as more days fill in.`); }
+    const sparkEntries = entries.slice(-60);
+    const sparkPoints = sparkEntries.map(([,m])=> MOODS[m].weight);
+    const svgW = 600, svgH = 60, pad_ = 6;
+    let sparkSvg = '';
+    if(sparkPoints.length >= 2){
+      const stepX = (svgW - pad_*2) / (sparkPoints.length - 1);
+      const coords = sparkPoints.map((w,i)=>{ const x = pad_ + i*stepX; const y = 30 - w*11; return [x,y]; });
+      const pathD = coords.map((c,i)=> (i===0?'M':'L')+c[0].toFixed(1)+','+c[1].toFixed(1)).join(' ');
+      const dots = coords.map((c,i)=>{
+        const mood = sparkEntries[i][1];
+        return `<circle class="yic-spark-dot" style="animation-delay:${i*10}ms" cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="2.2" fill="${MOODS[mood].hex}"/>`;
+      }).join('');
+      sparkSvg = `
+        <div class="yic-spark-wrap">
+          <div class="yic-spark-label">Mood trend — last ${sparkPoints.length} logged days</div>
+          <svg viewBox="0 0 ${svgW} ${svgH}" style="width:100%;height:60px;overflow:visible;">
+            <defs>
+              <linearGradient id="yic-spark-gradient" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#e4572e"/><stop offset="20%" stop-color="#7c8798"/>
+                <stop offset="40%" stop-color="#5b8fd6"/><stop offset="60%" stop-color="#ffd166"/>
+                <stop offset="80%" stop-color="#4fb286"/><stop offset="100%" stop-color="#ff7aae"/>
+              </linearGradient>
+            </defs>
+            <path class="yic-spark-line" d="${pathD}" style="stroke-dasharray:2000;stroke-dashoffset:2000;animation:yic-draw 1.1s ease forwards;"/>
+            ${dots}
+          </svg>
+        </div>
+        <style>@keyframes yic-draw{to{stroke-dashoffset:0;}}</style>
+      `;
+    }
+    const barColor = { pink:'var(--pink)', green:'var(--green)', yellow:'var(--yellow)', blue:'var(--blue)', grey:'var(--grey)', red:'var(--red)' };
+    const barsHtml = MOOD_ORDER.map(k=>{
+      const pct = total ? Math.round((counts[k]/total)*100) : 0;
+      return `<div class="yic-bar-row"><div class="yic-bar-label">${MOODS[k].label}</div><div class="yic-bar-track"><div class="yic-bar-fill" data-pct="${pct}" style="background:${barColor[k]}"></div></div><div class="yic-bar-pct">${pct}%</div></div>`;
+    }).join('');
+    const notedEntries = rawEntries.filter(([,e])=> e.note && e.note.trim()).sort((a,b)=> a[0] < b[0] ? 1 : -1).slice(0,3);
+    const notesHtml = notedEntries.length ? `
+      <div class="yic-divider"></div>
+      <h3 class="yic-stats-head" style="font-size:15px;">Recent reflections</h3>
+      <ul class="yic-notes-list">${notedEntries.map(([d,e],i)=>`<li style="animation-delay:${i*70}ms"><span class="yic-notes-date">${d}</span><span class="yic-notes-quote">${escapeHtml(e.note)}</span></li>`).join('')}</ul>
+    ` : '';
+    statsEl.innerHTML = `
+      <h2 class="yic-stats-head">${coupleConfig[activeProfile]}'s ${currentYear} so far</h2>
+      <p class="yic-stats-sub"><span id="yic-total-count">0</span> day${total===1?'':'s'} logged${streakLen>=2 ? ` · same-mood streak: <span id="yic-mood-streak-count">0</span>-day ${MOODS[streakMood].label.toLowerCase()}` : ''}</p>
+      ${sparkSvg}
+      ${barsHtml}
+      <div class="yic-divider"></div>
+      <h3 class="yic-stats-head" style="font-size:15px;">What your system notices</h3>
+      <ul class="yic-insights">${insights.map((t,i)=>`<li style="animation-delay:${i*70}ms">${t}</li>`).join('')}</ul>
+      ${notesHtml}
+      <button class="yic-clear-year" id="yic-clear-year-btn">Clear all of ${currentYear}</button>
+    `;
+    animateCount(document.getElementById('yic-total-count'), total);
+    const moodStreakEl = document.getElementById('yic-mood-streak-count');
+    if(moodStreakEl) animateCount(moodStreakEl, streakLen);
+    requestAnimationFrame(()=>{
+      statsEl.querySelectorAll('.yic-bar-fill').forEach(el=>{ requestAnimationFrame(()=>{ el.style.width = el.dataset.pct + '%'; }); });
+    });
+    const clearYearBtn = document.getElementById('yic-clear-year-btn');
+    let confirmArmed = false;
+    clearYearBtn.addEventListener('click', ()=>{
+      if(!confirmArmed){
+        confirmArmed = true;
+        clearYearBtn.textContent = 'Click again to confirm';
+        setTimeout(()=>{ confirmArmed = false; clearYearBtn.textContent = `Clear all of ${currentYear}`; }, 4000);
+      } else {
+        moodMap = {};
+        saveMoodMap(); renderQuilt(); renderStats(); renderCheckin(); refreshStreak(); renderTodayTasksPanel();
+      }
+    });
+  }
+
+  document.getElementById('yic-prev').addEventListener('click', ()=>{ currentYear--; loadYear(currentYear); });
+  document.getElementById('yic-next').addEventListener('click', ()=>{ currentYear++; loadYear(currentYear); });
+
+  (async function init(){
+    if(!coupleId){ renderLandingChoice(); return; }
+    try{
+      coupleConfig = await loadCoupleConfig();
+    }catch(e){
+      setupSlot.innerHTML = `<div class="yic-error">Couldn't connect to Firebase. Check that firebaseConfig at the top of this file is filled in correctly, and that Firestore is enabled in your project.</div>`;
+      return;
+    }
+    if(!coupleConfig){ renderNotFound(); return; }
+    const savedProfile = loadDeviceProfile();
+    if(!savedProfile){ renderWhoAmI(); return; }
+    await activateProfile(savedProfile);
+    appBody.style.display = '';
+    renderProfileToggle();
+    await loadBestStreak();
+    await loadYear(currentYear);
+  })();
+})();
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js').catch((e) => {
+        console.error('Service worker registration failed', e);
+      });
+    });
+  }
+</script>
+</body>
+</html>
