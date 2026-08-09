@@ -383,50 +383,143 @@ async function kvSet(key, value){
     return;
   }
 
-  function makeParticle(fresh){
-    if(season==='rainy'){
-      return { x: Math.random()*w, y: fresh ? Math.random()*h : -20, len: 14+Math.random()*20, speed: 6+Math.random()*6, drift: 1+Math.random()*0.6, o: 0.10+Math.random()*0.16 };
-    }
-    if(season==='winter'){
-      return { x: Math.random()*w, y: fresh ? Math.random()*h : -10, r: 1+Math.random()*2.2, speed: 0.5+Math.random()*1.1, drift: Math.random()*0.6-0.3, o: 0.25+Math.random()*0.35 };
-    }
-    if(season==='spring'){
-      return { x: Math.random()*w, y: fresh ? Math.random()*h : -10, r: 2+Math.random()*2.2, speed: 0.4+Math.random()*0.7, sway: Math.random()*Math.PI*2, o: 0.2+Math.random()*0.25, c: Math.random()>0.5?'255,122,174':'255,209,102' };
-    }
-    return { x: Math.random()*w, y: fresh ? Math.random()*h : -10, r: 2.4+Math.random()*2.8, speed: 0.4+Math.random()*0.8, sway: Math.random()*Math.PI*2, o: 0.2+Math.random()*0.25, c: Math.random()>0.5?'228,87,46':'255,209,102' };
+  // Theme-driven particle config (set by applyTheme)
+  let particleConfig = window.yicParticleConfig || { type: 'minimal', colors: ['139,92,246'], density: 1 };
+  function getParticleConfig(){
+    return window.yicParticleConfig || particleConfig;
   }
-  const COUNT = season==='rainy' ? 110 : season==='winter' ? 80 : 45;
+
+  function makeParticle(fresh){
+    const cfg = getParticleConfig();
+    const colors = cfg.colors || ['139,92,246'];
+    const density = cfg.density || 1;
+    const count = Math.round(45 * density);
+
+    if(cfg.type === 'hearts'){
+      // Romantic: floating hearts
+      return {
+        x: Math.random()*w,
+        y: fresh ? Math.random()*h : -20,
+        r: 4+Math.random()*6,
+        speed: 0.3+Math.random()*0.5,
+        sway: Math.random()*Math.PI*2,
+        swaySpeed: 0.01+Math.random()*0.02,
+        o: 0.15+Math.random()*0.2,
+        c: colors[Math.floor(Math.random()*colors.length)]
+      };
+    }
+    if(cfg.type === 'confetti'){
+      // Vibrant: confetti pieces
+      return {
+        x: Math.random()*w,
+        y: fresh ? Math.random()*h : -10,
+        r: 3+Math.random()*4,
+        speed: 0.5+Math.random()*1.2,
+        rotation: Math.random()*Math.PI*2,
+        rotSpeed: (Math.random()-0.5)*0.1,
+        o: 0.3+Math.random()*0.4,
+        c: colors[Math.floor(Math.random()*colors.length)]
+      };
+    }
+    if(cfg.type === 'leaves'){
+      // Cozy: falling leaves
+      return {
+        x: Math.random()*w,
+        y: fresh ? Math.random()*h : -10,
+        r: 3+Math.random()*5,
+        speed: 0.4+Math.random()*0.8,
+        sway: Math.random()*Math.PI*2,
+        swaySpeed: 0.015+Math.random()*0.02,
+        drift: (Math.random()-0.5)*1.5,
+        o: 0.25+Math.random()*0.3,
+        c: colors[Math.floor(Math.random()*colors.length)]
+      };
+    }
+    // Minimal: subtle orbs (personal)
+    return {
+      x: Math.random()*w,
+      y: fresh ? Math.random()*h : -10,
+      r: 2+Math.random()*3,
+      speed: 0.2+Math.random()*0.4,
+      sway: Math.random()*Math.PI*2,
+      swaySpeed: 0.005+Math.random()*0.01,
+      o: 0.1+Math.random()*0.15,
+      c: colors[Math.floor(Math.random()*colors.length)]
+    };
+  }
+  const COUNT = Math.round(45 * (particleConfig.density || 1));
   let particles = [];
   for(let i=0;i<COUNT;i++) particles.push(makeParticle(true));
 
   function tick(){
+    const cfg = getParticleConfig();
     ctx.clearRect(0,0,w,h);
     particles.forEach(p=>{
-      if(season==='rainy'){
-        ctx.strokeStyle = `rgba(200,220,255,${p.o})`;
-        ctx.lineWidth = 1.1;
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(p.x - p.drift*p.len*0.25, p.y + p.len);
-        ctx.stroke();
-        p.y += p.speed; p.x -= p.drift*0.5;
-        if(p.y > h) Object.assign(p, makeParticle(false));
-      } else if(season==='winter'){
-        ctx.fillStyle = `rgba(255,255,255,${p.o})`;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
-        p.y += p.speed; p.x += p.drift;
-        if(p.y > h) Object.assign(p, makeParticle(false));
-      } else {
-        p.sway += 0.02;
+      if(cfg.type === 'hearts'){
+        // Heart shape using two circles and a triangle
         ctx.fillStyle = `rgba(${p.c},${p.o})`;
-        ctx.beginPath(); ctx.arc(p.x + Math.sin(p.sway)*12, p.y, p.r, 0, 7); ctx.fill();
+        p.sway += p.swaySpeed;
+        const hx = p.x + Math.sin(p.sway)*8;
+        const hy = p.y;
+        const hr = p.r;
+        // Draw heart
+        ctx.beginPath();
+        ctx.moveTo(hx, hy + hr/3);
+        ctx.bezierCurveTo(hx - hr, hy - hr, hx - hr*2, hy + hr/2, hx, hy + hr);
+        ctx.bezierCurveTo(hx + hr*2, hy + hr/2, hx + hr, hy - hr, hx, hy + hr/3);
+        ctx.fill();
         p.y += p.speed;
-        if(p.y > h) Object.assign(p, makeParticle(false));
+        if(p.y > h + 20) Object.assign(p, makeParticle(false));
+      } else if(cfg.type === 'confetti'){
+        ctx.fillStyle = `rgba(${p.c},${p.o})`;
+        p.rotation += p.rotSpeed;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r);
+        ctx.restore();
+        p.y += p.speed;
+        p.x += Math.sin(p.rotation)*0.5;
+        if(p.y > h + 10) Object.assign(p, makeParticle(false));
+      } else if(cfg.type === 'leaves'){
+        ctx.fillStyle = `rgba(${p.c},${p.o})`;
+        p.sway += p.swaySpeed;
+        const lx = p.x + Math.sin(p.sway)*15 + p.drift;
+        const ly = p.y;
+        const lr = p.r;
+        ctx.save();
+        ctx.translate(lx, ly);
+        ctx.rotate(p.sway * 0.3);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, lr, lr*0.6, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+        p.y += p.speed;
+        p.x += p.drift * 0.1;
+        if(p.y > h + 15) Object.assign(p, makeParticle(false));
+      } else {
+        // Minimal orbs
+        p.sway += p.swaySpeed;
+        ctx.fillStyle = `rgba(${p.c},${p.o})`;
+        ctx.beginPath();
+        ctx.arc(p.x + Math.sin(p.sway)*6, p.y, p.r, 0, 7);
+        ctx.fill();
+        p.y += p.speed;
+        if(p.y > h + 10) Object.assign(p, makeParticle(false));
       }
     });
     requestAnimationFrame(tick);
   }
   tick();
+
+  // Listen for theme changes to update particle config
+  window.addEventListener('yic-theme-changed', () => {
+    particleConfig = window.yicParticleConfig || particleConfig;
+    // Recreate particles with new config
+    const newCount = Math.round(45 * (particleConfig.density || 1));
+    particles = [];
+    for(let i=0;i<newCount;i++) particles.push(makeParticle(true));
+  });
 })();
 
 /* ===== NEW: Group Types & Theme System ===== */
@@ -483,6 +576,223 @@ const PALETTE_PERSONALITIES = [
   { id: 'pastel', name: 'Pastel', hue: 340, desc: 'Soft, muted tones' }
 ];
 
+/* ===== NEW: Dynamic Theme Engine ===== */
+function getGroupDemographics(){
+  if(!groupConfig || !groupConfig.members) return { avgAgeIndex: 1, genderMix: {}, palettePrefs: [] };
+  const members = groupConfig.members;
+  const ageIndexMap = { '18-24': 0, '25-34': 1, '35-44': 2, '45-54': 3, '55+': 4 };
+  let ageSum = 0;
+  const genderMix = {};
+  const palettePrefs = [];
+  members.forEach(m => {
+    ageSum += ageIndexMap[m.ageRange] || 1;
+    genderMix[m.gender] = (genderMix[m.gender] || 0) + 1;
+    if(m.palettePersonality) palettePrefs.push(m.palettePersonality);
+  });
+  return {
+    avgAgeIndex: Math.round(ageSum / members.length),
+    genderMix,
+    palettePrefs
+  };
+}
+
+function computeThemeAdjustments(preset, demographics){
+  // Age-based adjustments
+  const ageAdjustments = [
+    { saturation: 1.15, contrast: 1.0, particleDensity: 1.3, fontScale: 1.0 },   // 18-24: brighter, more playful
+    { saturation: 1.0,  contrast: 1.0, particleDensity: 1.0, fontScale: 1.0 },   // 25-34: base
+    { saturation: 0.9,  contrast: 1.0, particleDensity: 0.8, fontScale: 1.0 },   // 35-44: slightly muted
+    { saturation: 0.85, contrast: 1.05, particleDensity: 0.6, fontScale: 1.05 }, // 45-54: warmer, reduced motion
+    { saturation: 0.8,  contrast: 1.15, particleDensity: 0.3, fontScale: 1.1 }   // 55+: high contrast, larger text, minimal
+  ];
+  const ageAdj = ageAdjustments[Math.max(0, Math.min(4, demographics.avgAgeIndex))] || ageAdjustments[1];
+
+  // Palette personality blend (median hue of member preferences)
+  let paletteHue = null;
+  if(demographics.palettePrefs.length > 0){
+    const hues = demographics.palettePrefs.map(p => {
+      const pp = PALETTE_PERSONALITIES.find(x => x.id === p);
+      return pp ? pp.hue : null;
+    }).filter(h => h !== null);
+    if(hues.length > 0){
+      hues.sort((a,b)=>a-b);
+      paletteHue = hues[Math.floor(hues.length/2)];
+    }
+  }
+
+  // Gender mix influence (subtle accent shift)
+  const totalMembers = Object.values(demographics.genderMix).reduce((a,b)=>a+b, 0);
+  let genderAccentShift = 0;
+  if(totalMembers > 0){
+    const femaleRatio = (demographics.genderMix.female || 0) / totalMembers;
+    const maleRatio = (demographics.genderMix.male || 0) / totalMembers;
+    // Subtle shift: more female -> slightly warmer, more male -> slightly cooler
+    genderAccentShift = (femaleRatio - maleRatio) * 15; // -15 to +15 degrees
+  }
+
+  return { ageAdj, paletteHue, genderAccentShift };
+}
+
+function adjustColor(color, saturation, hueShift){
+  // Simple color adjustment: convert hex to HSL, adjust, convert back
+  let r=0,g=0,b=0;
+  if(color.startsWith('#')){
+    const hex = color.slice(1);
+    if(hex.length === 3){
+      r = parseInt(hex[0]+hex[0],16);
+      g = parseInt(hex[1]+hex[1],16);
+      b = parseInt(hex[2]+hex[2],16);
+    } else if(hex.length === 6){
+      r = parseInt(hex.slice(0,2),16);
+      g = parseInt(hex.slice(2,4),16);
+      b = parseInt(hex.slice(4,6),16);
+    }
+  }
+  // Convert to HSL
+  r/=255; g/=255; b/=255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h=0, s=0, l=(max+min)/2;
+  if(max !== min){
+    const d = max-min;
+    s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+    switch(max){
+      case r: h = (g-b)/d + (g<b?6:0); break;
+      case g: h = (b-r)/d + 2; break;
+      case b: h = (r-g)/d + 4; break;
+    }
+    h *= 60;
+  }
+  // Apply adjustments
+  s = Math.max(0, Math.min(1, s * saturation));
+  if(hueShift !== 0) h = (h + hueShift + 360) % 360;
+  // Convert back to RGB
+  function hue2rgb(p,q,t){
+    if(t<0) t+=1; if(t>1) t-=1;
+    if(t<1/6) return p+(q-p)*6*t;
+    if(t<1/2) return q;
+    if(t<2/3) return p+(q-p)*(2/3-t)*6;
+    return p;
+  }
+  let nr, ng, nb;
+  if(s === 0){ nr=ng=nb=l; }
+  else {
+    const q = l < 0.5 ? l*(1+s) : l+s-l*s;
+    const p = 2*l-q;
+    nr = hue2rgb(p,q,h/360+1/3);
+    ng = hue2rgb(p,q,h/360);
+    nb = hue2rgb(p,q,h/360-1/3);
+  }
+  const toHex = (c) => Math.round(c*255).toString(16).padStart(2,'0');
+  return '#'+toHex(nr)+toHex(ng)+toHex(nb);
+}
+
+function applyTheme(){
+  if(!groupConfig) return;
+  const type = groupConfig.type || 'personal';
+  const preset = THEME_PRESETS[GROUP_TYPES[type]?.themeKey || 'personal'] || THEME_PRESETS.personal;
+  const demographics = getGroupDemographics();
+  const { ageAdj, paletteHue, genderAccentShift } = computeThemeAdjustments(preset, demographics);
+  const custom = groupConfig.themeCustomization || {};
+
+  // Base colors from preset (with custom overrides)
+  const bg = custom.bg || preset.bg;
+  const panel = custom.panel || preset.panel;
+  const panelLine = custom.panelLine || preset.panelLine;
+  const cellEmpty = custom.cellEmpty || preset.cellEmpty;
+  const text = custom.text || preset.text;
+  const textDim = custom.textDim || preset.textDim;
+  const textFaint = custom.textFaint || preset.textFaint;
+  const accent = custom.accent || preset.accent;
+  const accentSoft = custom.accentSoft || preset.accentSoft;
+
+  // Apply age-based saturation adjustment to mood colors
+  const baseMoods = { ...preset.moods };
+  if(custom.moodPalettes){
+    Object.assign(baseMoods, custom.moodPalettes);
+  }
+  const adjustedMoods = {};
+  MOOD_ORDER.forEach(k => {
+    let color = baseMoods[k] || preset.moods[k] || MOODS[k].hex;
+    // Apply palette personality hue shift if set
+    if(paletteHue !== null){
+      // Blend towards palette hue (30% influence)
+      color = adjustColor(color, ageAdj.saturation, (paletteHue - 180) * 0.3);
+    } else {
+      color = adjustColor(color, ageAdj.saturation, genderAccentShift);
+    }
+    adjustedMoods[k] = color;
+    MOODS[k].hex = color;
+    document.documentElement.style.setProperty('--'+k, color);
+  });
+
+  // Apply core CSS variables
+  document.documentElement.style.setProperty('--bg', bg);
+  document.documentElement.style.setProperty('--panel', panel);
+  document.documentElement.style.setProperty('--panel-line', panelLine);
+  document.documentElement.style.setProperty('--cell-empty', cellEmpty);
+  document.documentElement.style.setProperty('--text', text);
+  document.documentElement.style.setProperty('--text-dim', textDim);
+  document.documentElement.style.setProperty('--text-faint', textFaint);
+  document.documentElement.style.setProperty('--accent', accent);
+  document.documentElement.style.setProperty('--accent-soft', accentSoft);
+
+  // Season accents
+  const seasonAccents = custom.seasonAccents || preset.seasonAccents;
+  Object.entries(seasonAccents).forEach(([season, value]) => {
+    document.documentElement.style.setProperty('--season-accent-'+season, value);
+  });
+
+  // Update root season attribute for background gradients
+  const root = document.getElementById('yic-root');
+  const now = new Date();
+  const month = now.getMonth();
+  let season = 'spring';
+  if([11,0,1].includes(month)) season = 'winter';
+  else if([2,3,4].includes(month)) season = 'spring';
+  else if([5,6,7].includes(month)) season = 'rainy';
+  else season = 'autumn';
+  root.dataset.season = season;
+
+  // Apply font scale
+  document.documentElement.style.setProperty('--font-scale', ageAdj.fontScale);
+  document.body.style.fontSize = (16 * ageAdj.fontScale) + 'px';
+
+  // Apply reduced motion / high contrast from user preferences
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const highContrast = window.matchMedia('(prefers-contrast: more)').matches;
+  if(reduceMotion) document.documentElement.style.setProperty('--particle-density', '0');
+  else document.documentElement.style.setProperty('--particle-density', String(ageAdj.particleDensity));
+  if(highContrast){
+    document.documentElement.style.setProperty('--panel-line', '#555');
+    document.documentElement.style.setProperty('--text-dim', '#ccc');
+  }
+
+  // Rebuild seasonal particles with new theme
+  rebuildSeasonalParticles(preset.particles, preset.particleColors, ageAdj.particleDensity);
+
+  // Fire theme change event for particle system
+  window.dispatchEvent(new CustomEvent('yic-theme-changed'));
+}
+
+function rebuildSeasonalParticles(particleType, particleColors, density){
+  const canvas = document.getElementById('yic-season-canvas');
+  if(!canvas || !canvas.getContext) return;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduceMotion || density <= 0){
+    // Just clear and show static tint
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const season = document.getElementById('yic-root').dataset.season;
+    const SEASON_TINT = { rainy:'rgba(91,143,214,0.05)', winter:'rgba(255,255,255,0.04)', spring:'rgba(255,122,174,0.04)', autumn:'rgba(228,87,46,0.04)' };
+    ctx.fillStyle = SEASON_TINT[season];
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    return;
+  }
+  // The existing particle system will handle this on next frame
+  // We just need to update the global particle config
+  window.yicParticleConfig = { type: particleType, colors: particleColors, density };
+}
+
 /* ===== EXISTING: Mood System ===== */
 const MOODS = {
   pink:   { label:'Really good day',    hex:'#ff7aae', weight: 2   },
@@ -534,8 +844,6 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
   let moodMap = {};
   let bestStreak = 0;
   let lastRenderedStreak = -1;
-  let coupleConfig = null;
-  let activeProfile = null;
 
   // New multi-user state
   let groupConfig = null;
@@ -543,10 +851,6 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
   let currentUserId = null;
   let userMoods = {};
   let allMembers = [];
-
-  // Legacy helpers (keep for migration)
-  function loadDeviceProfile(){ return localStorage.getItem('yic-device-profile-'+coupleId) || null; }
-  function saveDeviceProfile(p){ localStorage.setItem('yic-device-profile-'+coupleId, p); }
 
   // New multi-user helpers
   function getCurrentUserMoods(){ return userMoods[currentUserId] || {}; }
@@ -569,14 +873,6 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
 
   function pad(n){ return n < 10 ? '0'+n : ''+n; }
   function toKey(y,m,d){ return y+'-'+pad(m+1)+'-'+pad(d); }
-  function storageKey(profile, year){ return 'moods-'+profile+'-'+year; }
-  function bestStreakKey(profile){ return 'best-streak-alltime-'+profile; }
-
-  async function loadCoupleConfig(){
-    const res = await kvGet('couple-config');
-    return res && res.value ? res.value : null;
-  }
-  async function saveCoupleConfig(cfg){ await kvSet('couple-config', cfg); }
 
   // New: per-user mood customization (by userId)
   async function loadMoodCustom(userId){
@@ -594,15 +890,6 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
     });
   }
 
-  // Legacy: activateProfile for backwards compat
-  async function activateProfile(p){
-    activeProfile = p;
-    const custom = await loadMoodCustom(p);
-    applyMoodCustom(custom);
-    renderLegend();
-  }
-
-  // New: activate user by userId
   async function activateUser(userId){
     currentUserId = userId;
     currentUser = allMembers.find(m => m.id === userId) || null;
@@ -629,11 +916,11 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
   function openCustomizeModal(){
     const backdrop = document.createElement('div');
     backdrop.className = 'yic-modal-backdrop';
-    const otherName = coupleConfig[activeProfile==='a' ? 'b' : 'a'];
+    const currentName = currentUser?.name || 'You';
     backdrop.innerHTML = `
       <div class="yic-modal">
         <h2>Make these colors yours</h2>
-        <p>Change what each color looks like and means to you — this only affects ${coupleConfig[activeProfile]}'s view. ${otherName} can set their own separately.</p>
+        <p>Change what each color looks like and means to you — this only affects ${currentName}'s view. Other members can set their own separately.</p>
         <div id="yic-custom-rows"></div>
         <div class="yic-modal-actions">
           <button class="yic-modal-save" id="yic-custom-save">Save</button>
@@ -654,7 +941,7 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
     backdrop.querySelector('#yic-custom-close').addEventListener('click', ()=> backdrop.remove());
     backdrop.querySelector('#yic-custom-reset').addEventListener('click', async ()=>{
       applyMoodCustom(null);
-      await saveMoodCustom(activeProfile, null);
+      await saveMoodCustom(currentUserId, null);
       refreshAllMoodDisplays();
       backdrop.remove();
     });
@@ -666,7 +953,7 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
         custom[k] = { hex: colorInput.value, label: textInput.value.trim() || DEFAULT_MOODS[k].label };
       });
       applyMoodCustom(custom);
-      await saveMoodCustom(activeProfile, custom);
+      await saveMoodCustom(currentUserId, custom);
       refreshAllMoodDisplays();
       backdrop.remove();
     });
@@ -811,10 +1098,13 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
   function showShareScreen(){
     setupSlot.innerHTML = `
       <div class="yic-setup">
-        <h2>Send this link to ${coupleConfig.b}</h2>
-        <p>They open it on their own device, pick their name, and you're both logging into the same tracker.</p>
+        <h2>Share this link with your ${groupConfig.type === 'couple' ? 'partner' : groupConfig.type === 'family' ? 'family' : 'friends'}</h2>
+        <p>They open it on their device, pick their name, and you'll all be in the same ${groupConfig.type}.</p>
         <div class="yic-share-box">${shareUrl()}</div>
         <button id="yic-copy-share">Copy link</button>
+        <div style="margin-top:12px;padding:10px;background:#1c1f2b;border:1px solid #363c50;border-radius:8px;font-size:11px;color:var(--text-dim);">
+          <strong>Your member link:</strong> Send this to <strong>${allMembers.slice(1).map(m=>m.name).join(', ') || 'members'}</strong> so they join as themselves.
+        </div>
       </div>
     `;
     document.getElementById('yic-copy-share').addEventListener('click', async ()=>{
@@ -824,7 +1114,7 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
       setTimeout(async ()=>{
         setupSlot.innerHTML = '';
         appBody.style.display = '';
-        renderProfileToggle();
+        renderProfileBar();
         await loadBestStreak();
         await loadYear(currentYear);
       }, 900);
@@ -835,69 +1125,110 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
     setupSlot.innerHTML = `
       <div class="yic-setup">
         <h2>Who's logging on this device?</h2>
-        <p>Each device remembers who it belongs to, so you don't have to pick every time.</p>
-        <div class="yic-whoami-btns">
-          <button data-p="a">${coupleConfig.a}</button>
-          <button data-p="b">${coupleConfig.b}</button>
+        <p>Each device remembers who it belongs to.</p>
+        <div class="yic-whoami-btns" style="flex-direction:column;gap:8px;">
+          ${allMembers.map(m=>`<button data-uid="${m.id}" style="text-align:left;display:flex;align-items:center;gap:10px;padding:14px 16px;">
+            <span style="font-size:20px;">${m.avatar}</span>
+            <div>
+              <div style="font-weight:600;">${m.name}</div>
+              <div style="font-size:11px;color:var(--text-faint);">${m.ageRange} · ${m.gender}</div>
+            </div>
+          </button>`).join('')}
         </div>
       </div>
     `;
     setupSlot.querySelectorAll('.yic-whoami-btns button').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
-        await activateProfile(btn.dataset.p);
-        saveDeviceProfile(activeProfile);
+        await activateUser(btn.dataset.uid);
+        saveDeviceUserId(btn.dataset.uid);
         setupSlot.innerHTML = '';
         appBody.style.display = '';
-        renderProfileToggle();
+        renderProfileBar();
         await loadBestStreak();
         await loadYear(currentYear);
       });
     });
   }
 
-  function renderProfileToggle(){
+  function renderProfileBar(){
+    // Profile switcher dropdown/avatar bar
+    const currentMember = allMembers.find(m => m.id === currentUserId);
     profileToggleEl.innerHTML = `
-      <button data-p="a" class="${activeProfile==='a'?'yic-active':''}">${coupleConfig.a}</button>
-      <button data-p="b" class="${activeProfile==='b'?'yic-active':''}">${coupleConfig.b}</button>
+      <div class="yic-profile-dropdown" style="position:relative;">
+        <button id="yic-profile-current" style="display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--panel-line);border-radius:9px;padding:6px 12px;cursor:pointer;">
+          <span style="font-size:20px;">${currentMember?.avatar || '👤'}</span>
+          <span style="font-weight:600;font-size:13px;">${currentMember?.name || 'You'}</span>
+          <span style="font-size:10px;">▼</span>
+        </button>
+        <div id="yic-profile-dropdown-menu" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--panel);border:1px solid var(--panel-line);border-radius:8px;margin-top:4px;overflow:hidden;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+          ${allMembers.map(m=>`<button data-uid="${m.id}" class="${m.id===currentUserId?'yic-active':''}" style="width:100%;text-align:left;padding:10px 12px;background:none;border:none;color:${m.id===currentUserId?'var(--text)':'var(--text-dim)'};font-size:13px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <span>${m.avatar}</span>
+            ${m.name}${m.id===currentUserId?' <span style="font-size:10px;color:var(--pink);">(you)</span>':''}
+          </button>`).join('')}
+          <div style="height:1px;background:var(--panel-line);margin:4px 0;"></div>
+          <button id="yic-switch-who-btn" style="width:100%;text-align:left;padding:10px 12px;background:none;border:none;color:var(--text-faint);font-size:12px;cursor:pointer;">Not you? Switch account</button>
+        </div>
+      </div>
     `;
-    profileToggleEl.querySelectorAll('button').forEach(btn=>{
+    const dropdown = profileToggleEl.querySelector('.yic-profile-dropdown');
+    const currentBtn = dropdown.querySelector('#yic-profile-current');
+    const menu = dropdown.querySelector('#yic-profile-dropdown-menu');
+
+    currentBtn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    });
+    document.addEventListener('click', ()=>{ menu.style.display = 'none'; }, true);
+
+    dropdown.querySelectorAll('[data-uid]').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
-        if(btn.dataset.p === activeProfile) return;
-        await activateProfile(btn.dataset.p);
-        renderProfileToggle();
+        if(btn.dataset.uid === currentUserId) { menu.style.display = 'none'; return; }
+        await activateUser(btn.dataset.uid);
+        saveDeviceUserId(btn.dataset.uid);
+        renderProfileBar();
         await loadBestStreak();
         await loadYear(currentYear);
+        menu.style.display = 'none';
       });
     });
+    dropdown.querySelector('#yic-switch-who-btn').addEventListener('click', ()=>{
+      saveDeviceUserId('');
+      appBody.style.display = 'none';
+      renderWhoAmI();
+      menu.style.display = 'none';
+    });
   }
-  document.getElementById('yic-customize-btn').addEventListener('click', openCustomizeModal);
-  document.getElementById('yic-switch-who-btn').addEventListener('click', ()=>{
-    saveDeviceProfile('');
-    appBody.style.display = 'none';
-    renderWhoAmI();
-  });
-  document.getElementById('yic-share-link-btn').addEventListener('click', async ()=>{
-    try{ await navigator.clipboard.writeText(shareUrl()); }catch(e){}
-    const btn = document.getElementById('yic-share-link-btn');
-    const old = btn.textContent; btn.textContent = 'copied!';
-    setTimeout(()=> btn.textContent = old, 1400);
-  });
 
-  async function fetchYearMap(profile, year){
-    const res = await kvGet(storageKey(profile, year));
-    return normalizeMap(res && res.value ? res.value : {});
+  function renderNotFound(){
+    setupSlot.innerHTML = `
+      <div class="yic-error">We couldn't find a group for this link. If you just created one moments ago, try refreshing. Otherwise, double check the exact link you were sent.</div>
+      <div class="yic-setup" style="margin-top:14px;">
+        <button id="yic-notfound-retry">Try again</button>
+        <button id="yic-notfound-new" style="margin-top:10px;background:none;border:1.5px solid var(--panel-line);color:var(--text);">Start a new group instead</button>
+      </div>
+    `;
+    document.getElementById('yic-notfound-retry').addEventListener('click', ()=> window.location.reload());
+    document.getElementById('yic-notfound-new').addEventListener('click', ()=>{
+      persistGroupId(Math.random().toString(36).slice(2, 10));
+      renderLandingChoice();
+    });
+  }
+
+  async function fetchYearMap(userId, year){
+    const raw = await getUserMoods(userId, year);
+    return normalizeMap(raw);
   }
   async function loadYear(year){
     quiltEl.innerHTML = '<div class="yic-empty-note" style="padding:20px;">Loading your year…</div>';
-    moodMap = await fetchYearMap(activeProfile, year);
+    moodMap = await fetchYearMap(currentUserId, year);
     renderCheckin(); renderQuilt(); renderStats(); refreshStreak(); renderTodayTasksPanel();
   }
-  async function saveMoodMap(){ await kvSet(storageKey(activeProfile, currentYear), moodMap); }
+  async function saveMoodMap(){ await setUserMoods(currentUserId, currentYear, moodMap); }
   async function loadBestStreak(){
-    const res = await kvGet(bestStreakKey(activeProfile));
+    const res = await kvGet('best-streak-'+currentUserId);
     bestStreak = res && res.value ? (parseInt(res.value,10)||0) : 0;
   }
-  async function saveBestStreak(){ await kvSet(bestStreakKey(activeProfile), String(bestStreak)); }
+  async function saveBestStreak(){ await kvSet('best-streak-'+currentUserId, String(bestStreak)); }
 
   function setMood(key, mood, note){
     const existingTasks = (moodMap[key] && moodMap[key].tasks) || [];
@@ -913,8 +1244,8 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
 
   async function refreshStreak(){
     const yearA = today.getFullYear(), yearB = yearA - 1;
-    const mapA = currentYear === yearA ? moodMap : await fetchYearMap(activeProfile, yearA);
-    const mapB = currentYear === yearB ? moodMap : await fetchYearMap(activeProfile, yearB);
+    const mapA = currentYear === yearA ? moodMap : await fetchYearMap(currentUserId, yearA);
+    const mapB = currentYear === yearB ? moodMap : await fetchYearMap(currentUserId, yearB);
     function lookup(key){
       const y = parseInt(key.slice(0,4),10);
       const m = y===yearA ? mapA : (y===yearB ? mapB : null);
@@ -941,7 +1272,7 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
     if(!loggedToday) sub = `<span class="yic-streak-sub yic-streak-warn">Log today to keep it going</span>`;
     else if(isRecord && streak > 0) sub = `<span class="yic-streak-sub yic-streak-best">New best — nice work</span>`;
     else sub = `<span class="yic-streak-sub">Best: ${bestStreak} day${bestStreak===1?'':'s'}</span>`;
-    const profileName = coupleConfig[activeProfile];
+    const profileName = currentUser?.name || 'You';
     streakSlot.innerHTML = `
       <div class="yic-streak">
         <div class="yic-streak-flame">🔥</div>
@@ -981,7 +1312,7 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
     box.className = 'yic-checkin';
     box.innerHTML = `
       <div class="yic-checkin-row">
-        <div class="yic-checkin-text">How was <b>today</b> for ${coupleConfig[activeProfile]} (${todayKey})?</div>
+        <div class="yic-checkin-text">How was <b>today</b> for ${currentUser?.name || 'You'} (${todayKey})?</div>
         <div class="yic-checkin-dots" id="yic-checkin-dots"></div>
       </div>
     `;
@@ -1253,7 +1584,7 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
     yearLabel.textContent = currentYear;
     if(rawEntries.length === 0){
       statsEl.innerHTML = `
-        <h2 class="yic-stats-head">${coupleConfig[activeProfile]}'s ${currentYear} — nothing logged yet</h2>
+        <h2 class="yic-stats-head">${currentUser?.name || 'You'}'s ${currentYear} — nothing logged yet</h2>
         <p class="yic-empty-note">Click a few days above to start. Once you've logged some, patterns and suggestions will build up here automatically — day by day.</p>
       `;
       return;
@@ -1376,7 +1707,7 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
       <ul class="yic-notes-list">${notedEntries.map(([d,e],i)=>`<li style="animation-delay:${i*70}ms"><span class="yic-notes-date">${d}</span><span class="yic-notes-quote">${escapeHtml(e.note)}</span></li>`).join('')}</ul>
     ` : '';
     statsEl.innerHTML = `
-      <h2 class="yic-stats-head">${coupleConfig[activeProfile]}'s ${currentYear} so far</h2>
+      <h2 class="yic-stats-head">${currentUser?.name || 'You'}'s ${currentYear} so far</h2>
       <p class="yic-stats-sub"><span id="yic-total-count">0</span> day${total===1?'':'s'} logged${streakLen>=2 ? ` · same-mood streak: <span id="yic-mood-streak-count">0</span>-day ${MOODS[streakMood].label.toLowerCase()}` : ''}</p>
       ${sparkSvg}
       ${barsHtml}
@@ -1410,19 +1741,20 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
   document.getElementById('yic-next').addEventListener('click', ()=>{ currentYear++; loadYear(currentYear); });
 
   (async function init(){
-    if(!coupleId){ renderLandingChoice(); return; }
+    if(!groupId){ renderLandingChoice(); return; }
     try{
-      coupleConfig = await loadCoupleConfig();
+      groupConfig = await loadGroupConfig();
     }catch(e){
       setupSlot.innerHTML = `<div class="yic-error">Couldn't connect to Firebase. Check that firebaseConfig at the top of this file is filled in correctly, and that Firestore is enabled in your project.</div>`;
       return;
     }
-    if(!coupleConfig){ renderNotFound(); return; }
-    const savedProfile = loadDeviceProfile();
-    if(!savedProfile){ renderWhoAmI(); return; }
-    await activateProfile(savedProfile);
+    if(!groupConfig){ renderNotFound(); return; }
+    allMembers = groupConfig.members || [];
+    const savedUserId = loadDeviceUserId();
+    if(!savedUserId){ renderWhoAmI(); return; }
+    await activateUser(savedUserId);
     appBody.style.display = '';
-    renderProfileToggle();
+    renderProfileBar();
     await loadBestStreak();
     await loadYear(currentYear);
   })();
