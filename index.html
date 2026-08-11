@@ -858,7 +858,7 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
     return (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : 'u'+Date.now()+Math.random().toString(36).slice(2,8);
   }
 
-  const today = new Date();
+const today = new Date();
   today.setHours(0,0,0,0);
   const todayKey = toKey(today.getFullYear(), today.getMonth(), today.getDate());
   let currentYear = today.getFullYear();
@@ -877,6 +877,26 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
   let overlayUserId = null;      // member id whose moods are shown as small dots on the quilt
   let overlayMoodMap = {};       // that member's mood map for currentYear
   let compareYearActive = false; // whether the year-comparison panel is showing
+  let splitView = { users: [], showAll: false }; // track split-view mode state
+
+// New: split-view and cluster view state management
+let clusterViewMode = 'grid'; // 'grid' for normal view, 'split' for split-view, 'aggregate' for aggregated views
+function toggleSplitView() {
+    if(splitView.showAll){
+        // Return to single view if toggle pressed again
+        document.getElementById('yic-split-view-btn').textContent = 'Split View';
+        // Remove split-view event listeners if they exist
+        if(splitView.handleCellClickListener){
+            document.removeEventListener('click', splitView.handleCellClickListener);
+        }
+    } else {
+        // Start split-view mode
+        document.getElementById('yic-split-view-btn').textContent = 'Back to Normal';
+        splitView.showAll = true;
+        clusterViewMode = 'split';
+        renderSplitView();
+    }
+}
 
   // New multi-user helpers
   function getCurrentUserMoods(){ return userMoods[currentUserId] || {}; }
@@ -1356,6 +1376,11 @@ const MILESTONES = [3,7,14,30,50,100,200,365];
       <button id="yic-export-btn">Export data</button>
       <button id="yic-import-btn">Import data</button>
       <input type="file" id="yic-import-file" accept="application/json" style="display:none;"/>
+      <button id="yic-split-view-btn" style="background:var(--accent-soft);color:var(--text);border:1px solid var(--panel-line);padding:6px 10px;border-radius:7px;cursor:pointer;font-size:11px;">Split View</button>
+      <div style="display:flex;gap:4px;">
+        <button id="yic-save-btn" style="background:var(--accent-soft);color:var(--text);border:1px solid var(--panel-line);padding:6px 10px;border-radius:7px;cursor:pointer;font-size:11px;">Save</button>
+        <button id="yic-export-all-btn" style="background:var(--panel);color:var(--text-dim);border:1px solid var(--panel-line);padding:6px 10px;border-radius:7px;cursor:pointer;font-size:11px;">Export All</button>
+      </div>
     `;
     const overlaySelect = document.getElementById('yic-overlay-select');
     if(overlaySelect){
