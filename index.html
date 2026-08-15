@@ -157,6 +157,45 @@ body{font-family:'Inter',sans-serif;color:var(--text);min-height:100vh;}
 .yic-tools-bar select, .yic-tools-bar button{background:var(--panel);border:1px solid var(--panel-line);color:var(--text-dim);border-radius:7px;padding:7px 10px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;}
 .yic-tools-bar button:hover, .yic-tools-bar select:hover{border-color:var(--accent);color:var(--text);}
 .yic-tools-bar button.yic-tool-active{border-color:var(--accent);color:var(--text);background:var(--accent-soft);}
+  /* Permission Management UI Styles */
+  .yic-member-perm-row {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:12px;
+    padding:12px;
+    background:var(--panel);
+    border:1px solid var(--panel-line);
+    border-radius:8px;
+    animation:yic-fade-up .5s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  .yic-member-perm-row label {
+    display:flex;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+    margin:0;
+  }
+  .yic-member-perm-row input[type="checkbox"] {
+    width:18px;
+    height:18px;
+  }
+  .yic-member-perm-row.disabled input[type="checkbox"] {
+    opacity:0.6;
+    cursor:not-allowed;
+  }
+  .yic-member-perm-row .yic-member-name {
+    flex:1;
+    font-weight:500;
+    margin:0;
+  }
+  .yic-member-perm-row .yic-member-perm-label {
+    font-size:12px;
+    color:var(--text-dim);
+  }
+  .yic-member-perm-row input[type="checkbox"]:checked {
+    accent-color:var(--accent);
+  }
 
 .yic-quilt{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:30px;}
 @media (max-width:720px){.yic-quilt{grid-template-columns:repeat(2,1fr);}}
@@ -829,9 +868,30 @@ const DOW_LABELS = ['M','T','W','T','F','S','S'];
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const MILESTONES = [3,7,14,30,50,100,200,365];
+const PAGE_SIZE = 5;
 
-  function isNegMood(m){ return MOODS[m] && MOODS[m].weight < 0; }
-  function isPosMood(m){ return MOODS[m] && MOODS[m].weight > 0; }
+// Helper function to check if a member has a specific permission
+function hasPermission(member, permission) {
+  return member.permissions?.[permission] ?? false;
+}
+function verifyEditPermission(memberId) {
+  const member = allMembers.find(m => m.id === memberId);
+  if (!member || !member.permissions) return false;
+  return hasPermission(member, 'edit') || hasPermission(member, 'admin');
+}
+function verifyViewPermission(memberId) {
+  const member = allMembers.find(m => m.id === memberId);
+  if (!member || !member.permissions) return false;
+  return hasPermission(member, 'view');
+}
+function verifyAdminPermission(memberId) {
+  const member = allMembers.find(m => m.id === memberId);
+  if (!member || !member.permissions) return false;
+  return hasPermission(member, 'admin');
+}
+function isNegMood(m){ return MOODS[m] && MOODS[m].weight < 0; }
+function isPosMood(m){ return MOODS[m] && MOODS[m].weight > 0; }
+
   function joinWords(arr){
     if(arr.length === 0) return '';
     if(arr.length === 1) return arr[0];
@@ -1356,6 +1416,86 @@ function toggleSplitView() {
     });
   }
 
+  function showPermissionScreen(){
+    const slot = document.getElementById('yic-setup-slot');
+    if (!slot) return;
+    slot.innerHTML = `
+      <div class="yic-setup">
+        <h2>Manage permissions</h2>
+        <p>Control who can view, edit, or manage this group.</p>
+        <div id="yic-permissions-list"></div>
+        <div class="yic-modal-actions">
+          <button class="yic-modal-save" id="yic-permissions-save">Save</button>
+          <button class="yic-modal-reset" id="yic-permissions-cancel">Cancel</button>
+        </div>
+      </div>
+    `;
+    const list = document.getElementById('yic-permissions-list');
+    allMembers.forEach(m => {
+      const perms = m.permissions || { view: true, edit: m.id === currentUserId, admin: m.id === currentUserId };
+      const row = document.createElement('div');
+      row.className = 'yic-member-perm-row';
+      row.setAttribute('data-uid', m.id);
+      row.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:12px;background:var(--panel);border:1px solid var(--panel-line);border-radius:8px;">
+          <span style="font-size:18px;">${m.avatar}</span>
+          <span style="flex:1;font-weight:500;">${m.name}</span>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" ${perms.view ? 'checked' : ''} data-perm="view"/>
+            <span style="font-size:12px;color:var(--text-dim);">View</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" ${perms.edit ? 'checked' : ''} data-perm="edit" ${!perms.view ? 'disabled' : ''}/>
+            <span style="font-size:12px;color:var(--text-dim);">Edit</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" ${perms.admin ? 'checked' : ''} data-perm="admin" ${!perms.edit ? 'disabled' : ''}/>
+            <span style="font-size:12px;color:var(--text-dim);">Admin</span>
+          </label>
+        </div>
+      `;
+      list.appendChild(row);
+      const checkboxes = row.querySelectorAll('input[type="checkbox"]');
+      checkboxes.forEach(cb => {
+        cb.addEventListener('change', () => {
+          const target = cb.dataset.perm;
+          const view = row.querySelectorAll('input[data-perm="view"]')[0].checked;
+          const edit = row.querySelectorAll('input[data-perm="edit"]')[0].checked;
+          const admin = row.querySelectorAll('input[data-perm="admin"]')[0].checked;
+          if (target === 'view' && !view) {
+            row.querySelectorAll('input[data-perm="edit"]').forEach(c => c.checked = false);
+            row.querySelectorAll('input[data-perm="admin"]').forEach(c => c.checked = false);
+          }
+          if (target === 'edit' && !edit) {
+            row.querySelectorAll('input[data-perm="admin"]').forEach(c => c.checked = false);
+          }
+          row.querySelectorAll('input[data-perm="edit"]').forEach(c => c.disabled = !view);
+          row.querySelectorAll('input[data-perm="admin"]').forEach(c => c.disabled = !edit);
+        });
+      });
+    });
+    document.getElementById('yic-permissions-save').addEventListener('click', async () => {
+      const updatedMembers = allMembers.map(m => {
+        const row = document.querySelector(`.yic-member-perm-row[data-uid="${m.id}"]`);
+        if (!row) return m;
+        const view = row.querySelector('input[data-perm="view"]').checked;
+        const edit = row.querySelector('input[data-perm="edit"]').checked;
+        const admin = row.querySelector('input[data-perm="admin"]').checked;
+        return { ...m, permissions: { view, edit, admin } };
+      });
+      groupConfig = { ...groupConfig, members: updatedMembers };
+      await saveGroupConfig(groupConfig);
+      slot.innerHTML = '';
+      appBody.style.display = '';
+      renderProfileBar();
+    });
+    document.getElementById('yic-permissions-cancel').addEventListener('click', () => {
+      slot.innerHTML = '';
+      appBody.style.display = '';
+      renderProfileBar();
+    });
+  }
+
   async function fetchYearMap(userId, year){
     const raw = await getUserMoods(userId, year);
     return normalizeMap(raw);
@@ -1524,11 +1664,21 @@ function toggleSplitView() {
   async function saveBestStreak(){ await kvSet('best-streak-'+currentUserId, String(bestStreak)); }
 
   function setMood(key, mood, note){
-    const existingTasks = (moodMap[key] && moodMap[key].tasks) || [];
-    moodMap[key] = { mood, note: (note||'').slice(0,200), tasks: existingTasks };
+    const targetMember = moodMap[key] ? { ...moodMap[key] } : null;
+    if (key === todayKey && !verifyEditPermission(currentUserId)) {
+      showInsufficientPermissions('view');
+      return;
+    }
+    moodMap[key] = { mood, note: (note||'').slice(0,200), tasks: (moodMap[key] && moodMap[key].tasks) || [] };
     saveMoodMap(); refreshStreak();
   }
-  function clearMood(key){ delete moodMap[key]; saveMoodMap(); refreshStreak(); }
+  function clearMood(key){
+    if (key === todayKey && !verifyEditPermission(currentUserId)) {
+      showInsufficientPermissions('view');
+      return;
+    }
+    delete moodMap[key]; saveMoodMap(); refreshStreak();
+  }
   function setTasks(key, tasks){
     const existing = moodMap[key] || { mood:null, note:'', tasks:[] };
     moodMap[key] = { ...existing, tasks };
