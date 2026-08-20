@@ -14,13 +14,25 @@
 <meta name="apple-mobile-web-app-title" content="Year in Color">
 <meta name="mobile-web-app-capable" content="yes">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Fraunces:ital,wght@0,500;0,600;1,500;1,600&family=Quicksand:wght@400;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 :root{
   --bg:#0f0e1a; --panel:#1a1828; --panel-line:#2d2a40; --cell-empty:#242238;
   --text:#f4f2ff; --text-dim:#a8a3c8; --text-faint:#6b6788;
   --pink:#ff7ab0; --green:#5fd3a0; --yellow:#ffd24d; --blue:#6ba8e0; --grey:#9a95b8; --red:#ff6b5a;
   --accent:#b388ff; --accent-soft:rgba(179,136,255,0.15);
+  /* Per-group-type identity tokens — every one of these is overwritten by
+     applyTheme() from the active group's preset, so the whole surface (not just
+     the mood swatches) changes character with the group type. */
+  --accent-2:#8b5cf6;
+  --accent-glow:rgba(179,136,255,0.35);
+  --on-accent:#14101f;
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'Nunito',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+  --title-style:italic;
+  --bg-grad-1:#0f0e1a; --bg-grad-2:#1a1530; --bg-grad-3:#16122a;
+  --day-radius:3px;
   --radius:24px;
   --season-accent-1: rgba(179,136,255,0.15);
   --season-accent-2: rgba(255,122,176,0.12);
@@ -73,14 +85,30 @@
   --today-pulse-glow:rgba(20,22,31,0.25);
 }
 
+/* ===== Per-group-type character =====
+   Colors come from THEME_PRESETS via applyTheme(); these rules carry the
+   structural personality (shape, spacing, letterforms) that colors can't. */
+:root[data-group-theme="romantic"] .yic-month,
+:root[data-group-theme="romantic"] .yic-legend,
+:root[data-group-theme="romantic"] .yic-stats{border-radius:26px;}
+:root[data-group-theme="romantic"] .yic-stats-head,
+:root[data-group-theme="romantic"] .yic-setup h2{letter-spacing:.01em;}
+:root[data-group-theme="vibrant"] .yic-title{letter-spacing:-.01em;}
+:root[data-group-theme="vibrant"] .yic-month-name{letter-spacing:.12em;}
+:root[data-group-theme="cozy"] .yic-legend-item,
+:root[data-group-theme="cozy"] .yic-task-text{font-weight:600;}
+:root[data-group-theme="personal"] .yic-month-name{letter-spacing:.14em;font-weight:500;}
+:root[data-group-theme="personal"] .yic-streak,
+:root[data-group-theme="personal"] .yic-checkin{border-radius:18px;}
+
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;background:var(--bg);}
-body{font-family:'Nunito',sans-serif;color:var(--text);min-height:100vh;}
-#yic-root{padding:32px 20px 60px;position:relative;overflow:hidden;
+body{font-family:var(--font-body);color:var(--text);min-height:100vh;}
+#yic-root{padding:32px 20px 60px;position:relative;overflow:hidden;min-height:100vh;
   background:
     radial-gradient(circle at 15% 0%, var(--season-accent-1), transparent 50%),
     radial-gradient(circle at 85% 100%, var(--season-accent-2), transparent 50%),
-    linear-gradient(135deg, #0f0e1a 0%, #1a1530 50%, #16122a 100%);
+    linear-gradient(135deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 50%, var(--bg-grad-3) 100%);
   background-size:200% 200%, 200% 200%, 100% 100%;
   animation: yic-ambient 22s ease-in-out infinite;
 }
@@ -106,53 +134,54 @@ body{font-family:'Nunito',sans-serif;color:var(--text);min-height:100vh;}
 #yic-season-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
 
 .yic-header{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;}
-.yic-title{font-family:'Fraunces',serif;font-style:italic;font-weight:500;font-size:32px;margin:0;}
-.yic-title b{font-style:normal;font-weight:600;}
-.yic-year-nav{display:flex;align-items:center;gap:14px;font-family:'IBM Plex Mono',monospace;}
+.yic-title{font-family:var(--font-display);font-style:var(--title-style);font-weight:600;font-size:32px;margin:0;}
+.yic-title b{font-style:normal;font-weight:700;color:var(--accent);}
+.yic-group-badge{display:inline-flex;align-items:center;gap:6px;margin-left:10px;padding:3px 10px;border-radius:999px;background:var(--accent-soft);border:1px solid var(--accent);color:var(--accent);font-family:var(--font-body);font-style:normal;font-size:11.5px;font-weight:700;letter-spacing:.02em;vertical-align:middle;}
+.yic-year-nav{display:flex;align-items:center;gap:14px;font-family:var(--font-mono);}
 .yic-year-nav button{background:none;border:1px solid var(--panel-line);color:var(--text-dim);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
 .yic-year-nav button:hover{border-color:var(--text-dim);color:var(--text);transform:translateY(-1px);}
 .yic-year-nav span{font-size:18px;font-weight:500;min-width:52px;text-align:center;}
 .yic-subtitle{color:var(--text-dim);font-size:14px;margin:0 0 20px;}
 
 .yic-setup{background:var(--panel);border:2px solid var(--panel-line);border-radius:var(--radius);padding:32px;max-width:480px;margin:40px auto;box-shadow:var(--shadow-md);}
-.yic-setup h2{font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;margin:0 0 8px;color:var(--accent);text-align:center;}
+.yic-setup h2{font-family:var(--font-display);font-weight:700;font-size:26px;margin:0 0 8px;color:var(--accent);text-align:center;}
 .yic-setup p{font-size:15px;color:var(--text-dim);margin:0 0 24px;line-height:1.6;text-align:center;}
 .yic-setup label{display:block;font-size:13px;color:var(--text-faint);margin-bottom:6px;font-weight:600;}
-.yic-setup input{width:100%;background:var(--cell-empty);border:2px solid var(--panel-line);border-radius:14px;color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;padding:12px 16px;margin-bottom:16px;outline:none;transition:border-color .2s;}
+.yic-setup input{width:100%;background:var(--cell-empty);border:2px solid var(--panel-line);border-radius:14px;color:var(--text);font-family:var(--font-body);font-size:15px;padding:12px 16px;margin-bottom:16px;outline:none;transition:border-color .2s;}
 .yic-setup input:focus{border-color:var(--accent);}
-.yic-setup button{width:100%;background:linear-gradient(135deg, var(--accent), #8b5cf6);color:#fff;font-weight:700;border:none;border-radius:14px;padding:12px;font-size:15px;cursor:pointer;transition:transform .15s, box-shadow .15s;font-family:'Nunito',sans-serif;}
-.yic-setup button:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(179,136,255,0.35);}
+.yic-setup button{width:100%;background:linear-gradient(135deg, var(--accent), var(--accent-2));color:var(--on-accent);font-weight:700;border:none;border-radius:14px;padding:12px;font-size:15px;cursor:pointer;transition:transform .15s, box-shadow .15s;font-family:var(--font-body);}
+.yic-setup button:hover{transform:translateY(-2px);box-shadow:0 6px 16px var(--accent-glow);}
 .yic-whoami-btns{display:flex;gap:12px;}
-.yic-whoami-btns button{flex:1;background:var(--panel);border:2px solid var(--panel-line);color:var(--text);border-radius:16px;padding:14px 8px;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Nunito',sans-serif;}
+.yic-whoami-btns button{flex:1;background:var(--panel);border:2px solid var(--panel-line);color:var(--text);border-radius:16px;padding:14px 8px;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;font-family:var(--font-body);}
 .yic-whoami-btns button:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-2px);}
-.yic-share-box{background:var(--cell-empty);border:2px dashed var(--panel-line);border-radius:12px;padding:12px 14px;font-family:'Nunito',sans-serif;font-size:13px;color:var(--text-dim);word-break:break-all;margin-bottom:16px;text-align:center;}
-.yic-copy-btn{background:linear-gradient(135deg, var(--accent), #8b5cf6);color:#fff;border:none;border-radius:12px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:16px;font-family:'Nunito',sans-serif;}
-.yic-copy-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(179,136,255,0.3);}
+.yic-share-box{background:var(--cell-empty);border:2px dashed var(--panel-line);border-radius:12px;padding:12px 14px;font-family:var(--font-body);font-size:13px;color:var(--text-dim);word-break:break-all;margin-bottom:16px;text-align:center;}
+.yic-copy-btn{background:linear-gradient(135deg, var(--accent), var(--accent-2));color:var(--on-accent);border:none;border-radius:12px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:16px;font-family:var(--font-body);}
+.yic-copy-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px var(--accent-glow);}
 
 .yic-profile-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
 .yic-profile-toggle{display:flex;background:var(--panel);border:1px solid var(--panel-line);border-radius:9px;padding:3px;}
-.yic-profile-toggle button{background:none;border:none;color:var(--text-dim);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;padding:7px 14px;border-radius:6px;cursor:pointer;transition:all .15s;}
-.yic-profile-toggle button.yic-active{background:var(--accent);color:#1a1530;}
+.yic-profile-toggle button{background:none;border:none;color:var(--text-dim);font-family:var(--font-body);font-size:13px;font-weight:600;padding:7px 14px;border-radius:6px;cursor:pointer;transition:all .15s;}
+.yic-profile-toggle button.yic-active{background:var(--accent);color:var(--on-accent);}
 .yic-profile-actions{display:flex;align-items:center;gap:14px;}
 .yic-switch-who,.yic-share-link-btn,.yic-customize-btn{background:none;border:none;color:var(--text-faint);font-size:11.5px;cursor:pointer;text-decoration:underline;}
 
 .yic-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.70);z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;}
 .yic-modal{background:var(--panel);border:1px solid var(--panel-line);border-radius:var(--radius);padding:24px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg);}
-.yic-modal h2{font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px;margin:0 0 4px;color:var(--accent);}
+.yic-modal h2{font-family:var(--font-display);font-weight:700;font-size:22px;margin:0 0 4px;color:var(--accent);}
 .yic-modal p{font-size:12.5px;color:var(--text-dim);margin:0 0 16px;line-height:1.5;}
 .yic-custom-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .yic-custom-row input[type=color]{width:34px;height:34px;border:1px solid var(--panel-line);border-radius:8px;background:none;cursor:pointer;padding:2px;flex-shrink:0;}
-.yic-custom-row input[type=text]{flex:1;background:var(--cell-empty);border:1px solid var(--panel-line);border-radius:7px;color:var(--text);font-family:'Nunito',sans-serif;font-size:13px;padding:8px 10px;}
+.yic-custom-row input[type=text]{flex:1;background:var(--cell-empty);border:1px solid var(--panel-line);border-radius:7px;color:var(--text);font-family:var(--font-body);font-size:13px;padding:8px 10px;}
 .yic-modal-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
-.yic-modal-save{flex:1;background:linear-gradient(135deg, var(--accent), #8b5cf6);color:#fff;font-weight:700;border:none;border-radius:10px;padding:9px;font-size:13.5px;cursor:pointer;}
-.yic-modal-save:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(179,136,255,0.3);}
+.yic-modal-save{flex:1;background:linear-gradient(135deg, var(--accent), var(--accent-2));color:var(--on-accent);font-weight:700;border:none;border-radius:10px;padding:9px;font-size:13.5px;cursor:pointer;}
+.yic-modal-save:hover{transform:translateY(-1px);box-shadow:0 4px 12px var(--accent-glow);}
 .yic-modal-reset,.yic-modal-close{background:none;border:1px solid var(--panel-line);color:var(--text-dim);border-radius:8px;padding:9px 12px;font-size:12.5px;cursor:pointer;}
 .yic-modal-reset:hover,.yic-modal-close:hover{color:var(--text);border-color:var(--accent);}
 
 .yic-streak{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg, var(--streak-start), var(--streak-end));border:1px solid var(--panel-line);border-radius:var(--radius);padding:14px 18px;margin-bottom:18px;opacity:0;animation: yic-fade-up .5s cubic-bezier(.2,.8,.2,1) forwards;}
-.yic-streak-flame{font-size:26px;line-height:1;filter:drop-shadow(0 0 6px rgba(255,209,102,0.5));animation:yic-flame-flicker 1.8s ease-in-out infinite;flex-shrink:0;}
+.yic-streak-flame{font-size:26px;line-height:1;filter:drop-shadow(0 0 6px var(--accent-glow));animation:yic-flame-flicker 1.8s ease-in-out infinite;flex-shrink:0;}
 @keyframes yic-flame-flicker{0%,100%{transform:scale(1) rotate(-2deg);}50%{transform:scale(1.1) rotate(2deg);}}
-.yic-streak-num{font-family:'Fraunces',serif;font-weight:600;font-size:24px;margin-right:2px;}
+.yic-streak-num{font-family:var(--font-display);font-weight:600;font-size:24px;margin-right:2px;}
 .yic-streak-text{display:flex;flex-direction:column;gap:2px;}
 .yic-streak-main{font-size:14px;color:var(--text);}
 .yic-streak-sub{font-size:12px;color:var(--text-faint);}
@@ -172,13 +201,13 @@ body{font-family:'Nunito',sans-serif;color:var(--text);min-height:100vh;}
 .yic-checkin-dots button{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.15);cursor:pointer;transition:transform .15s, box-shadow .15s;}
 .yic-checkin-dots button:hover{transform:scale(1.18);box-shadow:0 0 0 3px rgba(255,255,255,0.08);}
 .yic-checkin-skip{background:none;border:none;color:var(--text-faint);font-size:12px;cursor:pointer;text-decoration:underline;}
-.yic-checkin-note{width:100%;background:var(--cell-empty);border:1px solid var(--panel-line);border-radius:8px;color:var(--text);font-family:'Nunito',sans-serif;font-size:13px;padding:10px 12px;resize:none;margin:10px 0;}
+.yic-checkin-note{width:100%;background:var(--cell-empty);border:1px solid var(--panel-line);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:13px;padding:10px 12px;resize:none;margin:10px 0;}
 .yic-checkin-actions{display:flex;gap:10px;align-items:center;}
-.yic-checkin-save{background:linear-gradient(135deg, var(--accent), #8b5cf6);color:#fff;font-weight:700;border:none;border-radius:10px;padding:7px 14px;font-size:13px;cursor:pointer;}
-.yic-checkin-save:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(179,136,255,0.3);}
+.yic-checkin-save{background:linear-gradient(135deg, var(--accent), var(--accent-2));color:var(--on-accent);font-weight:700;border:none;border-radius:10px;padding:7px 14px;font-size:13px;cursor:pointer;}
+.yic-checkin-save:hover{transform:translateY(-1px);box-shadow:0 4px 12px var(--accent-glow);}
 
 .yic-tasks-panel{background:var(--panel);border:1px solid var(--panel-line);border-radius:var(--radius);padding:16px 18px;margin-bottom:22px;}
-.yic-tasks-panel-title{font-family:'Fraunces',serif;font-weight:600;font-size:15px;color:var(--text);margin-bottom:2px;}
+.yic-tasks-panel-title{font-family:var(--font-display);font-weight:600;font-size:15px;color:var(--text);margin-bottom:2px;}
 .yic-task-progress{font-size:11.5px;color:var(--text-faint);margin-bottom:8px;}
 .yic-tasklist{display:flex;flex-direction:column;gap:2px;margin-bottom:8px;}
 .yic-task-row{display:flex;align-items:center;gap:9px;padding:4px 0;}
@@ -192,9 +221,9 @@ body{font-family:'Nunito',sans-serif;color:var(--text);min-height:100vh;}
 .yic-task-del:hover{color:var(--red);}
 .yic-task-empty{font-size:12.5px;color:var(--text-faint);margin-bottom:8px;}
 .yic-task-add-row{display:flex;gap:6px;}
-.yic-task-add-input{flex:1;background:var(--cell-empty);border:1px solid var(--panel-line);border-radius:6px;color:var(--text);font-family:'Nunito',sans-serif;font-size:12.5px;padding:7px 9px;}
-.yic-task-add-btn{background:linear-gradient(135deg, var(--accent), #8b5cf6);color:#fff;border:none;border-radius:6px;padding:7px 12px;font-size:12.5px;font-weight:700;cursor:pointer;flex-shrink:0;}
-.yic-task-add-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(179,136,255,0.3);}
+.yic-task-add-input{flex:1;background:var(--cell-empty);border:1px solid var(--panel-line);border-radius:6px;color:var(--text);font-family:var(--font-body);font-size:12.5px;padding:7px 9px;}
+.yic-task-add-btn{background:linear-gradient(135deg, var(--accent), var(--accent-2));color:var(--on-accent);border:none;border-radius:6px;padding:7px 12px;font-size:12.5px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.yic-task-add-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px var(--accent-glow);}
 .yic-pop-divider{height:1px;background:var(--panel-line);margin:6px 0 8px;}
 .yic-task-badge{position:absolute;bottom:2px;left:2px;width:3.5px;height:3.5px;border-radius:1px;background:var(--task-badge-bg);}
 .yic-task-badge.yic-task-all-done{background:rgba(0,0,0,0.7);box-shadow:0 0 0 1px rgba(255,255,255,0.3) inset;}
@@ -203,7 +232,7 @@ body{font-family:'Nunito',sans-serif;color:var(--text);min-height:100vh;}
 .yic-legend-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dim);}
 .yic-swatch{width:13px;height:13px;border-radius:4px;flex-shrink:0;}
 
-.yic-tools-bar select, .yic-tools-bar button{background:var(--panel);border:1px solid var(--panel-line);color:var(--text-dim);border-radius:7px;padding:7px 10px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;}
+.yic-tools-bar select, .yic-tools-bar button{background:var(--panel);border:1px solid var(--panel-line);color:var(--text-dim);border-radius:7px;padding:7px 10px;font-size:12px;cursor:pointer;font-family:var(--font-body);}
 .yic-tools-bar button:hover, .yic-tools-bar select:hover{border-color:var(--accent);color:var(--text);}
 .yic-tools-bar button.yic-tool-active{border-color:var(--accent);color:var(--text);background:var(--accent-soft);}
   /* Permission Management UI Styles */
@@ -253,9 +282,9 @@ body{font-family:'Nunito',sans-serif;color:var(--text);min-height:100vh;}
 @keyframes yic-fade-up{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 .yic-month-name{font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;}
 .yic-dow-row{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;}
-.yic-dow{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--text-faint);text-align:center;}
+.yic-dow{font-family:var(--font-mono);font-size:8px;color:var(--text-faint);text-align:center;}
 .yic-days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-.yic-day{aspect-ratio:1;border-radius:3px;background:var(--cell-empty);cursor:pointer;position:relative;font-family:'IBM Plex Mono',monospace;font-size:8px;display:flex;align-items:center;justify-content:center;color:transparent;transition:transform .15s, background-color .3s;}
+.yic-day{aspect-ratio:1;border-radius:var(--day-radius);background:var(--cell-empty);cursor:pointer;position:relative;font-family:var(--font-mono);font-size:8px;display:flex;align-items:center;justify-content:center;color:transparent;transition:transform .15s, background-color .3s;}
 .yic-day.yic-blank{background:none;cursor:default;}
 .yic-day.yic-future{cursor:default;opacity:0.35;}
 .yic-day.yic-future:hover{transform:none;}
@@ -275,20 +304,20 @@ body{font-family:'Nunito',sans-serif;color:var(--text);min-height:100vh;}
 
 .yic-pop{position:fixed;z-index:50;background:var(--pop-bg);border:1px solid var(--pop-border);border-radius:10px;padding:10px;box-shadow:0 12px 30px rgba(0,0,0,0.5);display:flex;flex-direction:column;gap:2px;width:260px;opacity:0;transform:scale(0.92) translateY(4px);animation: yic-pop-in .16s cubic-bezier(.2,.8,.2,1) forwards;}
 @keyframes yic-pop-in{to{opacity:1;transform:scale(1) translateY(0);}}
-.yic-pop-date{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);padding:2px 2px 8px;}
+.yic-pop-date{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);padding:2px 2px 8px;}
 .yic-pop-moods{display:flex;flex-wrap:wrap;gap:7px;padding:0 2px 10px;}
 .yic-pop-mood-btn{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;transition:transform .12s, border-color .12s;}
 .yic-pop-mood-btn:hover{transform:scale(1.12);}
 .yic-pop-mood-btn.yic-selected{border-color:var(--text);}
-.yic-pop-note{width:100%;background:var(--pop-note-bg);border:1px solid var(--pop-note-border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:12.5px;padding:7px 9px;resize:none;margin:0 0 8px;}
+.yic-pop-note{width:100%;background:var(--pop-note-bg);border:1px solid var(--pop-note-border);border-radius:6px;color:var(--text);font-family:var(--font-body);font-size:12.5px;padding:7px 9px;resize:none;margin:0 0 8px;}
 .yic-pop-actions{display:flex;gap:8px;}
 .yic-pop-save{flex:1;background:var(--pop-save-bg);color:var(--pop-save-text);font-weight:600;border:none;border-radius:6px;padding:7px;font-size:12.5px;cursor:pointer;text-align:center;}
-.yic-pop-save:hover{background:var(--pop-save-hover-bg);}
+.yic-pop-save:hover{background:var(--pop-save-hover-bg);color:var(--pop-save-hover-text,var(--pop-save-text));}
 .yic-pop-clear{background:none;border:1px solid var(--pop-border);color:var(--text-faint);border-radius:6px;padding:7px 10px;font-size:12px;cursor:pointer;}
 .yic-pop-clear:hover{color:var(--red);border-color:var(--red);}
 
 .yic-stats{background:var(--panel);border:1px solid var(--panel-line);border-radius:var(--radius);padding:22px 24px;}
-.yic-stats-head{font-family:'Fraunces',serif;font-weight:600;font-size:18px;margin:0 0 4px;}
+.yic-stats-head{font-family:var(--font-display);font-weight:600;font-size:18px;margin:0 0 4px;}
 .yic-stats-sub{font-size:12px;color:var(--text-faint);margin:0 0 18px;}
 .yic-spark-wrap{margin-bottom:20px;}
 .yic-spark-label{font-size:11px;color:var(--text-faint);margin-bottom:6px;letter-spacing:0.03em;text-transform:uppercase;}
@@ -299,7 +328,7 @@ body{font-family:'Nunito',sans-serif;color:var(--text);min-height:100vh;}
 .yic-bar-label{width:110px;font-size:12.5px;color:var(--text-dim);flex-shrink:0;}
 .yic-bar-track{flex:1;height:8px;background:var(--cell-empty);border-radius:4px;overflow:hidden;}
 .yic-bar-fill{height:100%;border-radius:4px;width:0%;transition:width 1s cubic-bezier(.16,.84,.44,1);}
-.yic-bar-pct{width:38px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--text-dim);}
+.yic-bar-pct{width:38px;text-align:right;font-family:var(--font-mono);font-size:11.5px;color:var(--text-dim);}
 .yic-divider{height:1px;background:var(--panel-line);margin:18px 0;}
 .yic-insights{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}
 .yic-insights li{font-size:13.5px;line-height:1.55;color:var(--text);padding-left:16px;position:relative;opacity:0;animation: yic-fade-up .4s ease forwards;}
@@ -307,9 +336,9 @@ body{font-family:'Nunito',sans-serif;color:var(--text);min-height:100vh;}
 .yic-empty-note{font-size:13px;color:var(--text-dim);}
 .yic-notes-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}
 .yic-notes-list li{font-size:13px;line-height:1.5;color:var(--text-dim);opacity:0;animation: yic-fade-up .4s ease forwards;}
-.yic-notes-date{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text-faint);display:block;margin-bottom:2px;}
+.yic-notes-date{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);display:block;margin-bottom:2px;}
 .yic-notes-quote{color:var(--text);}
-.yic-clear-year{background:none;border:1px solid var(--panel-line);color:var(--text-faint);font-size:11.5px;padding:6px 12px;border-radius:7px;cursor:pointer;font-family:'Inter',sans-serif;margin-top:18px;transition:all .15s;}
+.yic-clear-year{background:none;border:1px solid var(--panel-line);color:var(--text-faint);font-size:11.5px;padding:6px 12px;border-radius:7px;cursor:pointer;font-family:var(--font-body);margin-top:18px;transition:all .15s;}
 .yic-clear-year:hover{color:var(--red);border-color:var(--red);}
 .yic-loading{padding:40px;text-align:center;color:var(--text-dim);font-size:14px;}
 .yic-error{padding:20px;color:var(--red);font-size:13px;background:var(--panel);border:1px solid var(--red);border-radius:var(--radius);max-width:500px;margin:40px auto;}
@@ -630,40 +659,111 @@ const GROUP_TYPES = {
   family:     { maxUsers: 8, label: 'Family', themeKey: 'cozy', icon: '👨‍👩‍👧‍👦' }
 };
 
+/* Each group type gets a whole visual identity, not just a swatch set:
+   background gradient, panel/surface colors, accent pair, typography and
+   corner language. applyTheme() pushes every field below into CSS variables. */
 const THEME_PRESETS = {
-  romantic: {   // Couple - warm, intimate
-    bg: '#1a0f1a', panel: '#2a1a2a', panelLine: '#3a2a3a', cellEmpty: '#2a1a2a',
-    text: '#f1efe9', textDim: '#c2b8c2', textFaint: '#8a7a8a',
-    accent: '#ff7aae', accentSoft: 'rgba(255,122,174,0.12)',
-    moods: { pink:'#ff7aae', green:'#4fb286', yellow:'#ffd166', blue:'#5b8fd6', grey:'#7c8798', red:'#e4572e' },
-    seasonAccents: { spring:'rgba(255,122,174,0.10)', rainy:'rgba(255,209,102,0.08)', autumn:'rgba(228,87,46,0.10)', winter:'rgba(91,143,214,0.08)' },
-    particles: 'hearts', particleColors: ['255,122,174', '255,209,102', '255,180,200']
+  romantic: {   // Couple — love: rose, blush, candlelight
+    bg: '#1b0d16', panel: '#2b1522', panelLine: '#432334', cellEmpty: '#331a28',
+    bgGrad: ['#1b0d16', '#3a1327', '#25101d'],
+    text: '#fdeef4', textDim: '#d8b3c6', textFaint: '#9c7186',
+    accent: '#ff6f9c', accent2: '#c2185b', accentSoft: 'rgba(255,111,156,0.14)',
+    moods: { pink:'#ff6f9c', green:'#69c9a5', yellow:'#ffc978', blue:'#7fa6e8', grey:'#a08b96', red:'#e4572e' },
+    seasonAccents: { spring:'rgba(255,111,156,0.12)', rainy:'rgba(255,201,120,0.09)', autumn:'rgba(228,87,46,0.11)', winter:'rgba(127,166,232,0.09)' },
+    particles: 'hearts', particleColors: ['255,111,156', '255,201,120', '255,180,200'],
+    fontDisplay: "'Fraunces',Georgia,serif", fontBody: "'Nunito',sans-serif", titleStyle: 'italic',
+    radius: '26px', dayRadius: '50%'
   },
-  vibrant: {    // Friends - energetic, social
-    bg: '#0f141f', panel: '#1a2332', panelLine: '#2a3a4a', cellEmpty: '#1a2332',
-    text: '#f1efe9', textDim: '#b8c2cc', textFaint: '#7a8a9a',
-    accent: '#00d4aa', accentSoft: 'rgba(0,212,170,0.12)',
-    moods: { pink:'#ff6b9d', green:'#00d4aa', yellow:'#ffd93d', blue:'#6bcbff', grey:'#95a5a6', red:'#ff6b6b' },
-    seasonAccents: { spring:'rgba(255,107,157,0.10)', rainy:'rgba(255,217,61,0.08)', autumn:'rgba(255,107,107,0.10)', winter:'rgba(107,203,255,0.08)' },
-    particles: 'confetti', particleColors: ['255,107,157', '0,212,170', '255,217,61', '107,203,255']
+  vibrant: {    // Friends — energetic, social, neon night
+    bg: '#0d1220', panel: '#16203a', panelLine: '#27365c', cellEmpty: '#1b2745',
+    bgGrad: ['#0b1020', '#122a4a', '#101a33'],
+    text: '#f2f6ff', textDim: '#a8bcd8', textFaint: '#6e83a3',
+    accent: '#00e0b8', accent2: '#3d7bff', accentSoft: 'rgba(0,224,184,0.14)',
+    moods: { pink:'#ff5f96', green:'#00e0b8', yellow:'#ffd93d', blue:'#4cc9ff', grey:'#8f9bb3', red:'#ff5b5b' },
+    seasonAccents: { spring:'rgba(255,95,150,0.11)', rainy:'rgba(255,217,61,0.09)', autumn:'rgba(255,91,91,0.11)', winter:'rgba(76,201,255,0.09)' },
+    particles: 'confetti', particleColors: ['255,95,150', '0,224,184', '255,217,61', '76,201,255'],
+    fontDisplay: "'Fredoka',sans-serif", fontBody: "'Nunito',sans-serif", titleStyle: 'normal',
+    radius: '14px', dayRadius: '2px'
   },
-  cozy: {       // Family - warm, nurturing
-    bg: '#1a1f0f', panel: '#2a321a', panelLine: '#3a422a', cellEmpty: '#2a321a',
-    text: '#f1efe9', textDim: '#c2cab8', textFaint: '#8a8a7a',
-    accent: '#ffb347', accentSoft: 'rgba(255,179,71,0.12)',
-    moods: { pink:'#ffb347', green:'#77dd77', yellow:'#ffdf77', blue:'#779ecb', grey:'#bdbdbd', red:'#ff6961' },
-    seasonAccents: { spring:'rgba(255,179,71,0.10)', rainy:'rgba(255,223,119,0.08)', autumn:'rgba(255,105,97,0.10)', winter:'rgba(119,158,203,0.08)' },
-    particles: 'leaves', particleColors: ['255,179,71', '119,221,119', '255,223,119', '119,158,203']
+  cozy: {       // Family — warm hearth: amber, terracotta, olive
+    bg: '#1a1410', panel: '#2a201a', panelLine: '#453428', cellEmpty: '#33261e',
+    bgGrad: ['#1a1410', '#33231a', '#221a13'],
+    text: '#fbf1e4', textDim: '#cdb79f', textFaint: '#95816c',
+    accent: '#ffab47', accent2: '#e07a3f', accentSoft: 'rgba(255,171,71,0.13)',
+    moods: { pink:'#f2a3a3', green:'#8fc57a', yellow:'#ffcf6b', blue:'#7fa3c9', grey:'#b3a695', red:'#e2664f' },
+    seasonAccents: { spring:'rgba(255,171,71,0.11)', rainy:'rgba(255,207,107,0.09)', autumn:'rgba(226,102,79,0.12)', winter:'rgba(127,163,201,0.09)' },
+    particles: 'leaves', particleColors: ['255,171,71', '143,197,122', '255,207,107', '226,102,79'],
+    fontDisplay: "'Quicksand',sans-serif", fontBody: "'Quicksand',sans-serif", titleStyle: 'normal',
+    radius: '22px', dayRadius: '6px'
   },
-  personal: {   // Individual - calm, focused
-    bg: '#14161f', panel: '#1c1f2b', panelLine: '#2a2e3d', cellEmpty: '#242836',
-    text: '#f1efe9', textDim: '#9298aa', textFaint: '#5c6178',
-    accent: '#8b5cf6', accentSoft: 'rgba(139,92,246,0.10)',
-    moods: { pink:'#f472b6', green:'#4ade80', yellow:'#facc15', blue:'#60a5fa', grey:'#9ca3af', red:'#f87171' },
-    seasonAccents: { spring:'rgba(244,114,182,0.08)', rainy:'rgba(250,204,21,0.07)', autumn:'rgba(248,113,113,0.08)', winter:'rgba(96,165,250,0.07)' },
-    particles: 'minimal', particleColors: ['139,92,246', '244,114,182', '96,165,250']
+  personal: {   // Individual — pleasant, calm: sage, mist, soft lavender
+    bg: '#111716', panel: '#19211f', panelLine: '#2a3835', cellEmpty: '#1f2b28',
+    bgGrad: ['#101614', '#18261f', '#131d20'],
+    text: '#eef4f1', textDim: '#a3b5ae', textFaint: '#6d807a',
+    accent: '#7fc9a9', accent2: '#9db7ff', accentSoft: 'rgba(127,201,169,0.12)',
+    moods: { pink:'#e79fb8', green:'#7fc9a9', yellow:'#e8c97a', blue:'#8fb4dd', grey:'#a1aab0', red:'#df8a72' },
+    seasonAccents: { spring:'rgba(231,159,184,0.09)', rainy:'rgba(232,201,122,0.08)', autumn:'rgba(223,138,114,0.09)', winter:'rgba(143,180,221,0.08)' },
+    particles: 'minimal', particleColors: ['127,201,169', '157,183,255', '231,159,184'],
+    fontDisplay: "'Fraunces',Georgia,serif", fontBody: "'Inter',sans-serif", titleStyle: 'normal',
+    radius: '18px', dayRadius: '4px'
   }
 };
+
+/* Wording that goes with each identity. Every section that speaks to the
+   person reads from here, so a couple's app doesn't sound like a solo one. */
+const THEME_COPY = {
+  romantic: {
+    badge: '💞 Couple',
+    subtitle: 'Color in your days together. Tap any day up to today, pick how it felt, and leave a note for each other — it syncs to both of you instantly.',
+    streakIcon: '💗',
+    streakSuffix: 'day streak of showing up',
+    checkinPrompt: (name, date) => `How was <b>today</b> for ${name} (${date})?`,
+    tasksTitle: 'Today, together',
+    insightsTitle: 'What your days are saying',
+    emptyStats: (name, year) => `${name}'s ${year} is still a blank canvas — color in a few days and your story starts here.`,
+    reflectionsTitle: 'Notes to remember'
+  },
+  vibrant: {
+    badge: '🎉 Friends',
+    subtitle: 'Every day gets a color. Tap a day, pick your vibe, drop a note — everyone on the link sees it right away.',
+    streakIcon: '⚡',
+    streakSuffix: 'day streak',
+    checkinPrompt: (name, date) => `What kind of day was it, ${name}? (${date})`,
+    tasksTitle: "Today's plans",
+    insightsTitle: 'Your patterns so far',
+    emptyStats: (name, year) => `Nothing logged for ${name} in ${year} yet — tap a few days and the stats will fill in fast.`,
+    reflectionsTitle: 'Recent notes'
+  },
+  cozy: {
+    badge: '🏡 Family',
+    subtitle: 'A shared calendar of how everyone is doing. Tap any day up to today, pick a color, add a note — the whole family sees it.',
+    streakIcon: '🕯️',
+    streakSuffix: 'day streak of checking in',
+    checkinPrompt: (name, date) => `How did today go for ${name}? (${date})`,
+    tasksTitle: "Today's list",
+    insightsTitle: 'What we notice',
+    emptyStats: (name, year) => `${name} hasn't logged any days in ${year} yet — start with today and the year fills in gently.`,
+
+    reflectionsTitle: 'Recent notes'
+  },
+  personal: {
+    badge: '🌿 Just me',
+    subtitle: 'A quiet record of your year. Tap any day up to today, pick a color, and add a note if you feel like it.',
+    streakIcon: '🌱',
+    streakSuffix: 'day streak',
+    checkinPrompt: (name, date) => `How was today, ${name}? (${date})`,
+    tasksTitle: "Today's intentions",
+    insightsTitle: 'What your year is showing you',
+    emptyStats: (name, year) => `Nothing logged for ${year} yet. Color in a few days and patterns will surface here on their own.`,
+    reflectionsTitle: 'Recent reflections'
+  }
+};
+function currentThemeKey(){
+  return GROUP_TYPES[groupConfig?.type || themePreviewType]?.themeKey || 'personal';
+}
+function themeCopy(){
+  return THEME_COPY[currentThemeKey()] || THEME_COPY.personal;
+}
 
 const AGE_RANGES = ['18-24', '25-34', '35-44', '45-54', '55+'];
 const GENDER_OPTIONS = ['male', 'female', 'non-binary', 'prefer-not'];
@@ -796,6 +896,45 @@ function getEffectiveThemeMode(){
   return mode === 'light' ? 'light' : 'dark';
 }
 
+function hexToRgbTriplet(hex){
+  if(typeof hex !== 'string' || !hex.startsWith('#')) return [0,0,0];
+  const h = hex.slice(1);
+  if(h.length === 3) return [parseInt(h[0]+h[0],16), parseInt(h[1]+h[1],16), parseInt(h[2]+h[2],16)];
+  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+}
+function rgba(hex, alpha){
+  const [r,g,b] = hexToRgbTriplet(hex);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+// Relative luminance, used to pick readable text on top of an accent fill.
+function isLightColor(hex){
+  const [r,g,b] = hexToRgbTriplet(hex);
+  return (0.2126*r + 0.7152*g + 0.0722*b) / 255 > 0.55;
+}
+function readableOn(hex){ return isLightColor(hex) ? '#16121a' : '#ffffff'; }
+// Midpoint of two colors — used to judge contrast against a two-stop gradient.
+function mixHex(a, b){
+  const [r1,g1,b1] = hexToRgbTriplet(a), [r2,g2,b2] = hexToRgbTriplet(b);
+  const to = (n) => Math.round(n).toString(16).padStart(2,'0');
+  return '#' + to((r1+r2)/2) + to((g1+g2)/2) + to((b1+b2)/2);
+}
+// Hue of a hex color, 0-360.
+function hueOf(hex){
+  let [r,g,b] = hexToRgbTriplet(hex).map(c => c/255);
+  const max = Math.max(r,g,b), min = Math.min(r,g,b), d = max-min;
+  if(d === 0) return 0;
+  let h;
+  switch(max){ case r: h = (g-b)/d + (g<b?6:0); break; case g: h = (b-r)/d + 2; break; default: h = (r-g)/d + 4; }
+  return h * 60;
+}
+// Shortest rotation from one hue to another, capped so a preference nudges a
+// color towards the preferred family without destroying its identity.
+function hueShiftToward(hex, targetHue, strength, cap){
+  if(targetHue === null || targetHue === undefined) return 0;
+  let delta = ((targetHue - hueOf(hex)) % 360 + 540) % 360 - 180;
+  return Math.max(-cap, Math.min(cap, delta * strength));
+}
+
 // Pure conversion: takes a dark preset and returns a light one, preserving
 // each color's hue and the group-type character. Text colors flip to dark,
 // everything else lifts in luminance.
@@ -826,21 +965,31 @@ function buildLightPreset(preset){
     const toHex=(c)=>Math.round(c*255).toString(16).padStart(2,'0');
     return '#'+toHex(nr)+toHex(ng)+toHex(nb);
   };
+  // Surfaces need distinct lightness from each other, otherwise the whole page
+  // flattens into one pale wash — so each role gets its own target luminance.
+  const LIGHTNESS = { bg: 0.96, panel: 0.995, panelLine: 0.84, cellEmpty: 0.91, accent: 0.52, accent2: 0.45 };
   const out = {};
   for(const k in preset){
     const v = preset[k];
     if(k === 'text')       out[k] = adjust(v, 0.12);
     else if(k === 'textDim')  out[k] = adjust(v, 0.38);
-    else if(k === 'textFaint') out[k] = adjust(v, 0.58);
+    else if(k === 'textFaint') out[k] = adjust(v, 0.55);
+    else if(k === 'bgGrad'){
+      out[k] = v.map((item, i) => adjust(item, [0.97, 0.93, 0.95][i] ?? 0.95));
+    }
+    else if(Array.isArray(v)){
+      // particleColors are "r,g,b" strings with no '#', so they pass through.
+      out[k] = v.map(item => (typeof item === 'string' && item.startsWith('#')) ? adjust(item, 0.72) : item);
+    }
     else if(k === 'moods'){
       out[k] = {};
       for(const kk in v){
         const vv = v[kk];
-        out[k][kk] = (typeof vv === 'string' && vv.startsWith('#')) ? adjust(vv, 0.68) : vv;
+        out[k][kk] = (typeof vv === 'string' && vv.startsWith('#')) ? adjust(vv, 0.62) : vv;
       }
     }
     else if(typeof v === 'string' && v.startsWith('#')){
-      out[k] = adjust(v, 0.84);
+      out[k] = adjust(v, LIGHTNESS[k] ?? 0.84);
     }
     else if(typeof v === 'object' && v !== null){
       out[k] = {};
@@ -854,9 +1003,13 @@ function buildLightPreset(preset){
   return out;
 }
 
+// Set while someone is choosing a group type during setup, so the whole page
+// can preview that identity before the group actually exists.
+let themePreviewType = null;
+
 function applyTheme(){
-  if(!groupConfig) return;
-  const type = groupConfig.type || 'personal';
+  if(!groupConfig && !themePreviewType) return;
+  const type = groupConfig?.type || themePreviewType || 'personal';
   let preset = THEME_PRESETS[GROUP_TYPES[type]?.themeKey || 'personal'] || THEME_PRESETS.personal;
   // Dark/light mode: light presets are derived from the dark ones so the
   // group-type character (romantic/vibrant/cozy/personal) is preserved.
@@ -867,7 +1020,7 @@ function applyTheme(){
   document.documentElement.setAttribute('data-theme-mode', effectiveMode);
   const demographics = getGroupDemographics();
   const { ageAdj, paletteHue, genderAccentShift } = computeThemeAdjustments(preset, demographics);
-  const custom = groupConfig.themeCustomization || {};
+  const custom = (groupConfig && groupConfig.themeCustomization) || {};
 
   // Base colors from preset (with custom overrides)
   const bg = custom.bg || preset.bg;
@@ -877,24 +1030,31 @@ function applyTheme(){
   const text = custom.text || preset.text;
   const textDim = custom.textDim || preset.textDim;
   const textFaint = custom.textFaint || preset.textFaint;
-  const accent = custom.accent || preset.accent;
-  const accentSoft = custom.accentSoft || preset.accentSoft;
+  // The accent is where a group's palette personality shows up most, so it leans
+  // towards the preferred hue — more than the mood swatches deliberately do.
+  const baseAccent2 = preset.accent2 || preset.accent;
+  const accent = custom.accent || adjustColor(preset.accent, 1,
+    paletteHue !== null ? hueShiftToward(preset.accent, paletteHue, 0.3, 22) : genderAccentShift);
+  const accent2 = custom.accent2 || adjustColor(baseAccent2, 1,
+    paletteHue !== null ? hueShiftToward(baseAccent2, paletteHue, 0.3, 22) : genderAccentShift);
+  // Derived from the final accent, so a hue-shifted accent never sits on a
+  // soft tint of the original hue.
+  const accentSoft = custom.accentSoft || rgba(accent, effectiveMode === 'light' ? 0.16 : 0.14);
 
   // Apply age-based saturation adjustment to mood colors
   const baseMoods = { ...preset.moods };
   if(custom.moodPalettes){
     Object.assign(baseMoods, custom.moodPalettes);
   }
+  // Mood colors carry meaning ("yellow = decent day"), so member preferences only
+  // nudge their hue — a large rotation would turn the yellow swatch red.
   const adjustedMoods = {};
   MOOD_ORDER.forEach(k => {
     let color = baseMoods[k] || preset.moods[k] || MOODS[k].hex;
-    // Apply palette personality hue shift if set
-    if(paletteHue !== null){
-      // Blend towards palette hue (30% influence)
-      color = adjustColor(color, ageAdj.saturation, (paletteHue - 180) * 0.3);
-    } else {
-      color = adjustColor(color, ageAdj.saturation, genderAccentShift);
-    }
+    const shift = paletteHue !== null
+      ? hueShiftToward(color, paletteHue, 0.08, 8)
+      : Math.max(-8, Math.min(8, genderAccentShift * 0.35));
+    color = adjustColor(color, ageAdj.saturation, shift);
     adjustedMoods[k] = color;
     MOODS[k].hex = color;
     document.documentElement.style.setProperty('--'+k, color);
@@ -906,6 +1066,7 @@ function applyTheme(){
   MOOD_ORDER.forEach(k => { themeMoodDefaults[k] = { hex: adjustedMoods[k], label: DEFAULT_MOODS[k].label }; });
 
   // Apply core CSS variables
+  document.documentElement.setAttribute('data-group-theme', GROUP_TYPES[type]?.themeKey || 'personal');
   document.documentElement.style.setProperty('--bg', bg);
   document.documentElement.style.setProperty('--panel', panel);
   document.documentElement.style.setProperty('--panel-line', panelLine);
@@ -914,7 +1075,49 @@ function applyTheme(){
   document.documentElement.style.setProperty('--text-dim', textDim);
   document.documentElement.style.setProperty('--text-faint', textFaint);
   document.documentElement.style.setProperty('--accent', accent);
+  document.documentElement.style.setProperty('--accent-2', accent2);
   document.documentElement.style.setProperty('--accent-soft', accentSoft);
+  document.documentElement.style.setProperty('--accent-glow', rgba(accent, 0.35));
+  // Buttons fill with an accent→accent2 gradient, so legibility is judged
+  // against the midpoint rather than either end.
+  document.documentElement.style.setProperty('--on-accent', readableOn(mixHex(accent, accent2)));
+
+  // Typography and corner language — the non-color half of each identity
+  document.documentElement.style.setProperty('--font-display', preset.fontDisplay || "'Fraunces',Georgia,serif");
+  document.documentElement.style.setProperty('--font-body', preset.fontBody || "'Nunito',sans-serif");
+  document.documentElement.style.setProperty('--title-style', preset.titleStyle || 'normal');
+  document.documentElement.style.setProperty('--radius', preset.radius || '24px');
+  document.documentElement.style.setProperty('--day-radius', preset.dayRadius || '3px');
+
+  // Page backdrop gradient
+  const grad = preset.bgGrad || [bg, panel, bg];
+  document.documentElement.style.setProperty('--bg-grad-1', grad[0]);
+  document.documentElement.style.setProperty('--bg-grad-2', grad[1]);
+  document.documentElement.style.setProperty('--bg-grad-3', grad[2]);
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+  if(themeColorMeta) themeColorMeta.setAttribute('content', grad[0]);
+
+  // Component surfaces derived from the same palette, so popovers, selects,
+  // check-in and streak cards stop being purple in a non-purple theme.
+  const isLightMode = effectiveMode === 'light';
+  const setVar = (n,v) => document.documentElement.style.setProperty(n, v);
+  setVar('--glass', rgba(panel, 0.85));
+  setVar('--pop-bg', panel);
+  setVar('--pop-border', panelLine);
+  setVar('--pop-note-bg', cellEmpty);
+  setVar('--pop-note-border', panelLine);
+  setVar('--pop-save-bg', accent);
+  setVar('--pop-save-text', readableOn(accent));
+  setVar('--pop-save-hover-text', readableOn(accent2));
+  setVar('--pop-save-hover-bg', accent2);
+  setVar('--select-bg', cellEmpty);
+  setVar('--select-border', panelLine);
+  setVar('--overlay-dot-shadow', rgba(isLightMode ? text : bg, 0.45));
+  setVar('--day-hover-color', rgba(isLightMode ? text : bg, 0.6));
+  setVar('--note-dot-bg', rgba(isLightMode ? text : bg, 0.7));
+  setVar('--task-badge-bg', rgba(isLightMode ? text : bg, 0.55));
+  setVar('--task-badge-all-bg', rgba(isLightMode ? text : bg, 0.75));
+  setVar('--today-pulse-glow', rgba(accent, 0.45));
 
   // Update root season attribute for background gradients
   const root = document.getElementById('yic-root');
@@ -934,6 +1137,12 @@ function applyTheme(){
   root.style.setProperty('--season-accent-1', seasonAccents[season] || accentSoft);
   root.style.setProperty('--season-accent-2', accentSoft);
 
+  // Check-in / streak cards pick up the theme's own accent pair
+  setVar('--checkin-start', rgba(accent, isLightMode ? 0.16 : 0.13));
+  setVar('--checkin-end', rgba(adjustedMoods.pink, isLightMode ? 0.12 : 0.08));
+  setVar('--streak-start', rgba(adjustedMoods.yellow, isLightMode ? 0.16 : 0.12));
+  setVar('--streak-end', rgba(accent2, isLightMode ? 0.12 : 0.09));
+
   // Apply font scale
   document.documentElement.style.setProperty('--font-scale', ageAdj.fontScale);
   document.body.style.fontSize = (16 * ageAdj.fontScale) + 'px';
@@ -948,11 +1157,32 @@ function applyTheme(){
     document.documentElement.style.setProperty('--text-dim', '#ccc');
   }
 
+  // Header wording/badge follow the same identity as the colors
+  applyThemeChrome();
+
   // Rebuild seasonal particles with new theme
   rebuildSeasonalParticles(preset.particles, preset.particleColors, ageAdj.particleDensity);
 
   // Fire theme change event for particle system
   window.dispatchEvent(new CustomEvent('yic-theme-changed'));
+}
+
+// Puts the group type's voice on the always-present chrome: the title badge
+// and the one-line explainer under it.
+function applyThemeChrome(){
+  const copy = themeCopy();
+  const titleEl = document.querySelector('.yic-title');
+  if(titleEl){
+    let badge = titleEl.querySelector('.yic-group-badge');
+    if(!badge){
+      badge = document.createElement('span');
+      badge.className = 'yic-group-badge';
+      titleEl.appendChild(badge);
+    }
+    badge.textContent = copy.badge;
+  }
+  const subtitleEl = document.querySelector('.yic-subtitle');
+  if(subtitleEl) subtitleEl.textContent = copy.subtitle;
 }
 
 function rebuildSeasonalParticles(particleType, particleColors, density){
@@ -1209,7 +1439,11 @@ function toggleSplitView() {
         <h2>Welcome to Year in Color</h2>
         <p>Track daily moods, notes & tasks — solo, as a couple, with friends, or family.</p>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:16px 0;">
-          ${Object.entries(GROUP_TYPES).map(([key, gt])=>`<button class="yic-group-type-btn" data-type="${key}" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px;background:var(--panel);border:1.5px solid var(--panel-line);border-radius:10px;cursor:pointer;transition:all .15s;"><span style="font-size:28px;">${gt.icon}</span><strong>${gt.label}</strong><small style="color:var(--text-faint);">${gt.maxUsers===1?'Just you':`Up to ${gt.maxUsers} people`}</small></button>`).join('')}
+          ${Object.entries(GROUP_TYPES).map(([key, gt])=>{
+            // Each tile previews its own theme, so the choice is visible before committing.
+            const p = THEME_PRESETS[gt.themeKey] || THEME_PRESETS.personal;
+            return `<button class="yic-group-type-btn" data-type="${key}" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px;background:${p.accentSoft};border:1.5px solid ${p.panelLine};border-radius:${p.radius};cursor:pointer;transition:all .15s;color:${p.text};font-family:${p.fontBody};"><span style="font-size:28px;">${gt.icon}</span><strong style="font-family:${p.fontDisplay};color:${p.accent};">${gt.label}</strong><small style="color:${p.textDim};">${gt.maxUsers===1?'Just you':`Up to ${gt.maxUsers} people`}</small><span style="display:flex;gap:3px;margin-top:4px;">${MOOD_ORDER.map(k=>`<span style="width:9px;height:9px;border-radius:${p.dayRadius === '50%' ? '50%' : '2px'};background:${p.moods[k]};"></span>`).join('')}</span></button>`;
+          }).join('')}
         </div>
         <button id="yic-join-existing" style="width:100%;margin-top:10px;background:none;border:1.5px solid var(--panel-line);color:var(--text);padding:12px;border-radius:8px;">I already have an invite link</button>
         <div id="yic-join-form" style="display:none;margin-top:16px;">
@@ -1225,9 +1459,11 @@ function toggleSplitView() {
       btn.addEventListener('click', ()=>{
         // Preview each group type's actual theme accent as it's picked, rather than a fixed pink.
         const previewPreset = THEME_PRESETS[GROUP_TYPES[btn.dataset.type]?.themeKey] || THEME_PRESETS.personal;
-        setupSlot.querySelectorAll('.yic-group-type-btn').forEach(b=>{ b.style.borderColor='var(--panel-line)'; b.style.background='var(--panel)'; });
+        setupSlot.querySelectorAll('.yic-group-type-btn').forEach(b=>{
+          const bp = THEME_PRESETS[GROUP_TYPES[b.dataset.type]?.themeKey] || THEME_PRESETS.personal;
+          b.style.borderColor = bp.panelLine;
+        });
         btn.style.borderColor = previewPreset.accent;
-        btn.style.background = previewPreset.accentSoft;
         renderGroupSetup(btn.dataset.type);
       });
     });
@@ -1277,6 +1513,8 @@ function toggleSplitView() {
 
   function renderGroupSetup(type){
     const gt = GROUP_TYPES[type];
+    themePreviewType = type;
+    applyTheme(); // live-preview the picked identity across the whole page
     const maxUsers = gt.maxUsers;
     let memberInputs = '';
     for(let i=0;i<maxUsers;i++){
@@ -1345,6 +1583,7 @@ function toggleSplitView() {
       };
       await saveGroupConfig(groupConfig);
       allMembers = members;
+      themePreviewType = null;
       applyTheme();
       currentUserId = members[0].id;
       currentUser = members[0];
@@ -1942,6 +2181,7 @@ function toggleSplitView() {
   }
 
   function renderStreakUI(streak, loggedToday, isRecord){
+    const copy = themeCopy();
     let sub = '';
     if(!loggedToday) sub = `<span class="yic-streak-sub yic-streak-warn">Log today to keep it going</span>`;
     else if(isRecord && streak > 0) sub = `<span class="yic-streak-sub yic-streak-best">New best — nice work</span>`;
@@ -1949,9 +2189,9 @@ function toggleSplitView() {
     const profileName = currentUser?.name || 'You';
     streakSlot.innerHTML = `
       <div class="yic-streak">
-        <div class="yic-streak-flame">🔥</div>
+        <div class="yic-streak-flame">${copy.streakIcon}</div>
         <div class="yic-streak-text">
-          <div class="yic-streak-main"><span class="yic-streak-num" id="yic-streak-num">0</span>day streak — ${profileName}</div>
+          <div class="yic-streak-main"><span class="yic-streak-num" id="yic-streak-num">0</span>${copy.streakSuffix} — ${escapeHtml(profileName)}</div>
           ${sub}
         </div>
       </div>
@@ -1987,7 +2227,7 @@ function toggleSplitView() {
     box.className = 'yic-checkin';
     box.innerHTML = `
       <div class="yic-checkin-row">
-        <div class="yic-checkin-text">How was <b>today</b> for ${currentUser?.name || 'You'} (${todayKey})?</div>
+        <div class="yic-checkin-text">${themeCopy().checkinPrompt(escapeHtml(currentUser?.name || 'You'), todayKey)}</div>
         <div class="yic-checkin-dots" id="yic-checkin-dots"></div>
       </div>
     `;
@@ -2098,7 +2338,7 @@ function toggleSplitView() {
     if(currentYear !== today.getFullYear()){ todayTasksSlot.innerHTML = ''; return; }
     todayTasksSlot.innerHTML = `
       <div class="yic-tasks-panel">
-        <div class="yic-tasks-panel-title">Today's checklist</div>
+        <div class="yic-tasks-panel-title">${themeCopy().tasksTitle}</div>
         <div id="yic-today-tasks-inner"></div>
       </div>
     `;
@@ -2291,8 +2531,8 @@ function toggleSplitView() {
     yearLabel.textContent = currentYear;
     if(rawEntries.length === 0){
       statsEl.innerHTML = `
-        <h2 class="yic-stats-head">${currentUser?.name || 'You'}'s ${currentYear} — nothing logged yet</h2>
-        <p class="yic-empty-note">Click a few days above to start. Once you've logged some, patterns and suggestions will build up here automatically — day by day.</p>
+        <h2 class="yic-stats-head">${escapeHtml(currentUser?.name || 'You')}'s ${currentYear} — nothing logged yet</h2>
+        <p class="yic-empty-note">${themeCopy().emptyStats(escapeHtml(currentUser?.name || 'You'), currentYear)}</p>
         <div id="yic-year-compare-slot"></div>
       `;
       renderYearComparisonBlock();
@@ -2351,9 +2591,8 @@ function toggleSplitView() {
           let bg = 'var(--cell-empty)';
           if(avg !== null){
             const t = Math.max(-1, Math.min(1, avg / 2)); // mood weights run roughly -2..2
-            bg = t >= 0
-              ? `rgba(79,178,134,${(0.15 + Math.abs(t)*0.55).toFixed(2)})`
-              : `rgba(228,87,46,${(0.15 + Math.abs(t)*0.55).toFixed(2)})`;
+            const strength = (0.15 + Math.abs(t)*0.55).toFixed(2);
+            bg = t >= 0 ? rgba(MOODS.green.hex, strength) : rgba(MOODS.red.hex, strength);
           }
           const dowFullName = DOW_FULL[(i+1)%7];
           const tip = count ? `${dowFullName}: avg ${avg.toFixed(2)} over ${count} day${count===1?'':'s'}` : `${dowFullName}: no data yet`;
@@ -2421,9 +2660,9 @@ function toggleSplitView() {
           <svg viewBox="0 0 ${svgW} ${svgH}" style="width:100%;height:60px;overflow:visible;">
             <defs>
               <linearGradient id="yic-spark-gradient" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stop-color="#e4572e"/><stop offset="20%" stop-color="#7c8798"/>
-                <stop offset="40%" stop-color="#5b8fd6"/><stop offset="60%" stop-color="#ffd166"/>
-                <stop offset="80%" stop-color="#4fb286"/><stop offset="100%" stop-color="#ff7aae"/>
+                <stop offset="0%" stop-color="${MOODS.red.hex}"/><stop offset="20%" stop-color="${MOODS.grey.hex}"/>
+                <stop offset="40%" stop-color="${MOODS.blue.hex}"/><stop offset="60%" stop-color="${MOODS.yellow.hex}"/>
+                <stop offset="80%" stop-color="${MOODS.green.hex}"/><stop offset="100%" stop-color="${MOODS.pink.hex}"/>
               </linearGradient>
             </defs>
             <path class="yic-spark-line" d="${pathD}" style="stroke-dasharray:2000;stroke-dashoffset:2000;animation:yic-draw 1.1s ease forwards;"/>
@@ -2441,7 +2680,7 @@ function toggleSplitView() {
     const notedEntries = rawEntries.filter(([,e])=> e.note && e.note.trim()).sort((a,b)=> a[0] < b[0] ? 1 : -1).slice(0,3);
     const notesHtml = notedEntries.length ? `
       <div class="yic-divider"></div>
-      <h3 class="yic-stats-head" style="font-size:15px;">Recent reflections</h3>
+      <h3 class="yic-stats-head" style="font-size:15px;">${themeCopy().reflectionsTitle}</h3>
       <ul class="yic-notes-list">${notedEntries.map(([d,e],i)=>`<li style="animation-delay:${i*70}ms"><span class="yic-notes-date">${d}</span><span class="yic-notes-quote">${escapeHtml(e.note)}</span></li>`).join('')}</ul>
     ` : '';
     statsEl.innerHTML = `
@@ -2450,7 +2689,7 @@ function toggleSplitView() {
       ${sparkSvg}
       ${barsHtml}
       <div class="yic-divider"></div>
-      <h3 class="yic-stats-head" style="font-size:15px;">What your system notices</h3>
+      <h3 class="yic-stats-head" style="font-size:15px;">${themeCopy().insightsTitle}</h3>
       <ul class="yic-insights">${insights.map((t,i)=>`<li style="animation-delay:${i*70}ms">${t}</li>`).join('')}</ul>
       ${heatmapHtml}
       ${notesHtml}
